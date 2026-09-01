@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Order Online</title>
+<style>
+  :root{
+    --brand-primary:#c2410c;
+    --brand-primary-dark:#9a3412;
+    --brand-dark:#1c1917;
+    --brand-accent:#f97316;
+    --brand-bg:#fafaf9;
+    --brand-card:#ffffff;
+    --brand-border:#e7e5e4;
+    --brand-muted:#78716c;
+    --brand-radius:16px;
+    --brand-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; font-family:var(--brand-font); background:var(--brand-bg); color:var(--brand-dark); padding-bottom:110px; }
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  input{ font-family:inherit; font-size:16px; }
+  h1,h2,h3,p{ margin:0; }
+
+  .container{ padding:0 16px; }
+  .flex{ display:flex; }
+  .flex-1{ flex:1; }
+  .row{ display:flex; align-items:center; }
+  .col{ display:flex; flex-direction:column; }
+  .gap-sm{ gap:8px; }
+  .hidden{ display:none !important; }
+  .grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  header{ position:sticky; top:0; z-index:30; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  header .container{ padding-top:16px; padding-bottom:12px; }
+  header h1{ font-size:20px; font-weight:700; color:var(--brand-dark); }
+  header p.subtitle{ font-size:12px; color:var(--brand-muted); margin-top:2px; }
+
+  .cat-nav{ display:flex; gap:8px; overflow-x:auto; padding:0 16px 12px; scrollbar-width:none; }
+  .cat-nav::-webkit-scrollbar{ display:none; }
+  .chip{ white-space:nowrap; border-radius:999px; padding:8px 16px; font-size:14px; font-weight:600; border:1px solid var(--brand-border); background:#fff; color:var(--brand-muted); flex-shrink:0; }
+  .chip.active{ background:var(--brand-primary); color:#fff; border-color:var(--brand-primary); }
+
+  main{ padding:12px 16px 0; display:flex; flex-direction:column; gap:24px; }
+  .section-title{ font-size:18px; font-weight:700; color:var(--brand-dark); margin-bottom:8px; }
+  .item-list{ display:flex; flex-direction:column; gap:8px; }
+  .card{ background:var(--brand-card); border-radius:var(--brand-radius); border:1px solid var(--brand-border); box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .item-row{ display:flex; align-items:center; justify-content:space-between; padding:12px; }
+  .item-info{ flex:1; padding-right:12px; }
+  .item-name{ font-weight:600; font-size:15px; line-height:1.3; }
+  .item-desc{ font-size:12px; color:var(--brand-muted); margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .item-price{ font-size:14px; font-weight:700; color:var(--brand-primary); margin-top:4px; }
+
+  .add-btn{ background:var(--brand-primary); color:#fff; border-radius:999px; width:44px; height:44px; font-size:22px; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.15); flex-shrink:0; }
+  .add-btn:active{ background:var(--brand-primary-dark); }
+  .stepper{ display:flex; align-items:center; gap:8px; background:#f5f5f4; border-radius:999px; padding:4px; flex-shrink:0; }
+  .qty-btn{ width:32px; height:32px; border-radius:999px; font-weight:700; font-size:16px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+  .qty-btn.plus{ background:var(--brand-primary); color:#fff; }
+  .qty-val{ width:20px; text-align:center; font-weight:700; font-size:14px; }
+
+  .empty-state{ text-align:center; color:var(--brand-muted); padding:80px 20px; white-space:pre-wrap; }
+  .retry-btn{ margin-top:16px; background:var(--brand-primary); color:#fff; border-radius:10px; padding:10px 20px; font-weight:700; font-size:14px; }
+
+  #cartBar{ position:fixed; left:0; right:0; bottom:0; z-index:40; padding:0 12px 12px; padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+  #cartBarInner{ background:var(--brand-primary); color:#fff; border-radius:16px; box-shadow:0 6px 20px rgba(0,0,0,.2); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; }
+  #cartCount{ background:rgba(255,255,255,.25); border-radius:999px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  #cartTotal{ font-weight:600; margin-left:8px; }
+  #cartBarInner .cta{ font-weight:700; }
+
+  #checkoutOverlay{ position:fixed; inset:0; z-index:50; }
+  #checkoutOverlay .backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.4); }
+  #checkoutSheet{ position:absolute; left:0; right:0; bottom:0; top:24px; background:#fff; border-radius:24px 24px 0 0; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .28s ease; }
+  .sheet-header{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--brand-border); }
+  .sheet-back{ font-size:14px; color:var(--brand-muted); background:none; visibility:hidden; }
+  .sheet-close{ font-size:20px; color:#a8a29e; background:none; line-height:1; }
+  .step-dots{ display:flex; gap:6px; }
+  .step-dot{ width:8px; height:8px; border-radius:999px; background:var(--brand-border); }
+  .step-dot.active{ background:var(--brand-primary); }
+  .sheet-body{ flex:1; overflow-y:auto; padding:16px; }
+  .sheet-footer{ padding:12px 16px; border-top:1px solid var(--brand-border); padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+  .primary-btn{ width:100%; background:var(--brand-primary); color:#fff; border-radius:12px; padding:14px; font-weight:700; font-size:16px; }
+  .primary-btn:disabled{ opacity:.4; }
+
+  .type-card{ background:#fff; border:1px solid var(--brand-border); border-radius:var(--brand-radius); padding:12px; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .type-card.active{ border-color:var(--brand-primary); background:#fff7ed; }
+  .type-emoji{ font-size:24px; }
+  .type-label{ font-size:12px; font-weight:600; color:var(--brand-muted); }
+  .type-label.active{ color:var(--brand-primary); }
+
+  .field-label{ font-size:14px; font-weight:600; color:var(--brand-muted); display:block; margin-bottom:4px; }
+  .text-input{ width:100%; border:1px solid #d6d3d1; border-radius:12px; padding:10px 12px; }
+
+  .pay-card{ width:100%; background:#fff; border:1px solid var(--brand-border); border-radius:var(--brand-radius); padding:12px; display:flex; align-items:center; gap:12px; text-align:left; }
+  .pay-card.active{ border-color:var(--brand-primary); background:#fff7ed; }
+  .pay-emoji{ font-size:24px; }
+  .pay-name{ font-size:14px; font-weight:600; display:block; }
+  .pay-name.active{ color:var(--brand-primary); }
+  .pay-sub{ font-size:12px; color:var(--brand-muted); display:block; }
+  .radio-outer{ width:20px; height:20px; border-radius:999px; border:2px solid #d6d3d1; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .radio-outer.active{ border-color:var(--brand-primary); }
+  .radio-inner{ width:10px; height:10px; border-radius:999px; background:var(--brand-primary); }
+
+  .review-row{ display:flex; justify-content:space-between; font-size:14px; padding:6px 0; border-bottom:1px solid #f0efee; }
+  .review-total{ display:flex; justify-content:space-between; padding-top:8px; font-weight:700; font-size:16px; }
+  .review-total .amt{ color:var(--brand-primary); }
+  .review-meta{ font-size:14px; color:var(--brand-muted); margin-top:8px; display:flex; flex-direction:column; gap:4px; }
+  .review-meta b{ color:var(--brand-dark); }
+  #submitError{ color:#dc2626; font-size:14px; margin-top:8px; white-space:pre-wrap; }
+
+  .success-wrap{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:60px 0; }
+  .success-icon{ font-size:48px; margin-bottom:16px; }
+  .success-title{ font-weight:700; font-size:20px; margin-bottom:4px; }
+  .success-sub{ font-size:13px; color:var(--brand-muted); margin-bottom:16px; }
+  .success-note{ font-size:14px; color:#57534e; max-width:280px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <h1 id="restaurantName">Con Vista Cafe and Dining</h1>
+    <p class="subtitle">Tap items to add them to your order</p>
+  </div>
+  <div id="categoryNav" class="cat-nav"></div>
+</header>
+
+<main id="menuRoot">
+  <div id="loadingState" class="empty-state">Loading menu…</div>
+</main>
+
+<div id="cartBar" class="hidden">
+  <div id="cartBarInner" role="button" onclick="openCheckout()">
+    <div class="row">
+      <span id="cartCount">0</span>
+      <span id="cartTotal">₱0.00</span>
+    </div>
+    <span class="cta">Checkout →</span>
+  </div>
+</div>
+
+<div id="checkoutOverlay" class="hidden">
+  <div class="backdrop" onclick="closeCheckout()"></div>
+  <div id="checkoutSheet">
+    <div class="sheet-header">
+      <button onclick="checkoutBack()" id="checkoutBackBtn" class="sheet-back">← Back</button>
+      <div id="stepDots" class="step-dots"></div>
+      <button onclick="closeCheckout()" class="sheet-close">✕</button>
+    </div>
+    <div id="checkoutBody" class="sheet-body"></div>
+    <div class="sheet-footer">
+      <button id="checkoutPrimaryBtn" class="primary-btn"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   SUPABASE CONFIG — talks to Supabase's REST API using XMLHttpRequest.
+   Deliberately NOT using fetch() or any SDK/CDN script: some HTML preview
+   tools intercept/wrap window.fetch to log network activity, and that
+   wrapping layer can throw errors unrelated to this app's own logic
+   (e.g. trying to relay a Headers object through postMessage). XHR is a
+   much older, more universally-supported API that avoids that class of
+   interception entirely, so this is the most compatible option.
+   ====================================================================== */
+const SUPABASE_URL = 'https://zmcalfrnhmhjjpjlpleh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptY2FsZnJuaG1oampwamxwbGVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3Mzc1NjQsImV4cCI6MjEwMzMxMzU2NH0.LqxMPTlNnwVuaO5cZ5j-bbQSJmL96Vwlsg1fUrtI7qA';
+const REST_URL = SUPABASE_URL + '/rest/v1';
+
+// Generic XHR wrapper that always resolves to { data, error } and never throws.
+function restRequest(path, method, body, extraHeaders) {
+  return new Promise(function (resolve) {
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method || 'GET', REST_URL + path, true);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      if (extraHeaders) {
+        Object.keys(extraHeaders).forEach(function (k) { xhr.setRequestHeader(k, extraHeaders[k]); });
+      }
+      xhr.timeout = 15000;
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status >= 200 && xhr.status < 300) {
+          let data = null;
+          try { data = xhr.responseText ? JSON.parse(xhr.responseText) : null; } catch (e) { /* leave data null */ }
+          resolve({ data: data, error: null });
+        } else {
+          const bodyText = xhr.responseText ? (' — ' + xhr.responseText.slice(0, 200)) : '';
+          resolve({ data: null, error: 'HTTP ' + xhr.status + ' ' + xhr.statusText + bodyText });
+        }
+      };
+      xhr.onerror = function () {
+        resolve({ data: null, error: 'Network error — request could not reach Supabase. Check your internet connection.' });
+      };
+      xhr.ontimeout = function () {
+        resolve({ data: null, error: 'Request timed out after 15s.' });
+      };
+      xhr.send(body ? JSON.stringify(body) : null);
+    } catch (e) {
+      resolve({ data: null, error: 'Exception — ' + ((e && e.message) || String(e)) });
+    }
+  });
+}
+
+/* ======================================================================
+   STATE
+   ====================================================================== */
+let CATEGORIES = [];
+let ITEMS = [];
+let CART = {};
+let step = 1;
+let orderType = null;
+let paymentMethod = null;
+let contactValue = '';
+
+const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/* ======================================================================
+   DATA LOADING
+   ====================================================================== */
+async function fetchMenu() {
+  document.getElementById('loadingState').textContent = 'Loading menu…';
+
+  const [catRes, itemRes] = await Promise.all([
+    restRequest('/categories?select=*&order=sort_order.asc', 'GET'),
+    restRequest('/menu_items?select=*&available=eq.true&order=sort_order.asc', 'GET')
+  ]);
+
+  if (catRes.error || itemRes.error) {
+    const msg = catRes.error || itemRes.error;
+    const el = document.getElementById('loadingState');
+    el.innerHTML = 'Could not load the menu.<br>' + escapeHtml(msg) + '<br>';
+    const btn = document.createElement('button');
+    btn.className = 'retry-btn';
+    btn.textContent = 'Retry';
+    btn.onclick = fetchMenu;
+    el.appendChild(btn);
+    console.error('Menu load error:', msg);
+    return;
+  }
+
+  CATEGORIES = catRes.data || [];
+  ITEMS = itemRes.data || [];
+  renderCategoryNav();
+  renderMenu();
+}
+
+function submitOrder(payload) {
+  return restRequest('/orders', 'POST', payload, { 'Prefer': 'return=representation' });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ======================================================================
+   RENDER: CATEGORY NAV
+   ====================================================================== */
+function renderCategoryNav() {
+  const nav = document.getElementById('categoryNav');
+  nav.innerHTML = CATEGORIES.map((c, i) => `
+    <button onclick="scrollToCategory('${c.name.replace(/'/g, "\\'")}')"
+      class="chip ${i === 0 ? 'active' : ''}" data-cat-chip="${escapeHtml(c.name)}">${escapeHtml(c.name)}</button>
+  `).join('');
+}
+
+function scrollToCategory(name) {
+  const el = document.getElementById('cat-' + cssSafe(name));
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('[data-cat-chip]').forEach(chip => {
+    chip.classList.toggle('active', chip.getAttribute('data-cat-chip') === name);
+  });
+}
+function cssSafe(s){ return s.replace(/[^a-z0-9]/gi, '_'); }
+
+/* ======================================================================
+   RENDER: MENU
+   ====================================================================== */
+function renderMenu() {
+  const root = document.getElementById('menuRoot');
+  if (!ITEMS.length) {
+    root.innerHTML = '<p class="empty-state">No items available right now.</p>';
+    return;
+  }
+  const grouped = {};
+  ITEMS.forEach(it => {
+    grouped[it.category] = grouped[it.category] || [];
+    grouped[it.category].push(it);
+  });
+  const order = CATEGORIES.length ? CATEGORIES.map(c => c.name) : Object.keys(grouped);
+
+  root.innerHTML = order.filter(cat => grouped[cat]?.length).map(cat => `
+    <section id="cat-${cssSafe(cat)}">
+      <h2 class="section-title">${escapeHtml(cat)}</h2>
+      <div class="item-list">
+        ${grouped[cat].map(item => itemRow(item)).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function itemRow(item) {
+  const qty = CART[item.id]?.qty || 0;
+  return `
+    <div class="card item-row">
+      <div class="item-info">
+        <p class="item-name">${escapeHtml(item.name)}</p>
+        ${item.description ? `<p class="item-desc">${escapeHtml(item.description)}</p>` : ''}
+        <p class="item-price">${peso(item.price)}</p>
+      </div>
+      <div id="qtyBox-${item.id}">
+        ${qty > 0 ? stepperHtml(item.id, qty) : addBtnHtml(item.id)}
+      </div>
+    </div>
+  `;
+}
+
+function addBtnHtml(id) {
+  return `<button onclick="addItem('${id}')" class="add-btn">+</button>`;
+}
+function stepperHtml(id, qty) {
+  return `
+    <div class="stepper">
+      <button onclick="decItem('${id}')" class="qty-btn">−</button>
+      <span class="qty-val">${qty}</span>
+      <button onclick="addItem('${id}')" class="qty-btn plus">+</button>
+    </div>`;
+}
+
+/* ======================================================================
+   CART LOGIC
+   ====================================================================== */
+function addItem(id) {
+  const item = ITEMS.find(i => i.id === id);
+  if (!item) return;
+  if (!CART[id]) CART[id] = { item, qty: 0 };
+  CART[id].qty += 1;
+  refreshItemUI(id);
+  refreshCartBar();
+}
+function decItem(id) {
+  if (!CART[id]) return;
+  CART[id].qty -= 1;
+  if (CART[id].qty <= 0) delete CART[id];
+  refreshItemUI(id);
+  refreshCartBar();
+}
+function refreshItemUI(id) {
+  const box = document.getElementById('qtyBox-' + id);
+  if (!box) return;
+  const qty = CART[id]?.qty || 0;
+  box.innerHTML = qty > 0 ? stepperHtml(id, qty) : addBtnHtml(id);
+}
+function cartArray() { return Object.values(CART); }
+function cartCount() { return cartArray().reduce((s, c) => s + c.qty, 0); }
+function cartSubtotal() { return cartArray().reduce((s, c) => s + c.qty * Number(c.item.price), 0); }
+
+function refreshCartBar() {
+  const bar = document.getElementById('cartBar');
+  const count = cartCount();
+  if (count === 0) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = peso(cartSubtotal());
+}
+
+/* ======================================================================
+   CHECKOUT FLOW
+   ====================================================================== */
+function openCheckout() {
+  if (cartCount() === 0) return;
+  step = 1;
+  document.getElementById('checkoutOverlay').classList.remove('hidden');
+  requestAnimationFrame(() => {
+    document.getElementById('checkoutSheet').style.transform = 'translateY(0)';
+  });
+  renderStep();
+}
+function closeCheckout() {
+  document.getElementById('checkoutSheet').style.transform = 'translateY(100%)';
+  setTimeout(() => document.getElementById('checkoutOverlay').classList.add('hidden'), 250);
+}
+function checkoutBack() {
+  if (step > 1) { step -= 1; renderStep(); }
+}
+
+function renderStep() {
+  const dots = document.getElementById('stepDots');
+  dots.innerHTML = [1, 2, 3].map(n => `<span class="step-dot ${n <= step ? 'active' : ''}"></span>`).join('');
+  document.getElementById('checkoutBackBtn').style.visibility = step === 1 ? 'hidden' : 'visible';
+
+  const body = document.getElementById('checkoutBody');
+  const primary = document.getElementById('checkoutPrimaryBtn');
+
+  if (step === 1) {
+    body.innerHTML = `
+      <h3 class="section-title" style="margin-bottom:12px;">How would you like your order?</h3>
+      <div class="grid-3" style="margin-bottom:20px;">
+        ${orderTypeCard('dine-in', 'Dine-In', '🍽️')}
+        ${orderTypeCard('takeout', 'Takeout', '🥡')}
+        ${orderTypeCard('pickup', 'Pickup', '🛍️')}
+      </div>
+      <div id="contactField"></div>
+    `;
+    renderContactField();
+    primary.textContent = 'Continue to Payment';
+    primary.disabled = !(orderType && contactValue.trim().length > 0);
+    primary.onclick = () => { if (orderType && contactValue.trim()) { step = 2; renderStep(); } };
+  }
+
+  if (step === 2) {
+    body.innerHTML = `
+      <h3 class="section-title" style="margin-bottom:12px;">How will you pay?</h3>
+      <div class="col gap-sm">
+        ${paymentCard('Cash', '💵', 'Pay at counter / on delivery')}
+        ${paymentCard('GCash', '📱', 'Marked Paid instantly')}
+        ${paymentCard('Online Banking', '🏦', 'Marked Paid instantly')}
+        ${paymentCard('Credit Card', '💳', 'Marked Paid instantly')}
+      </div>
+    `;
+    primary.textContent = 'Review Order';
+    primary.disabled = !paymentMethod;
+    primary.onclick = () => { if (paymentMethod) { step = 3; renderStep(); } };
+  }
+
+  if (step === 3) {
+    const rows = cartArray().map(c => `
+      <div class="review-row">
+        <span>${c.qty} × ${escapeHtml(c.item.name)}</span>
+        <span style="font-weight:600;">${peso(c.qty * c.item.price)}</span>
+      </div>`).join('');
+    body.innerHTML = `
+      <h3 class="section-title" style="margin-bottom:12px;">Review your order</h3>
+      <div class="card" style="padding:12px; margin-bottom:16px;">${rows}
+        <div class="review-total">
+          <span>Total</span><span class="amt">${peso(cartSubtotal())}</span>
+        </div>
+      </div>
+      <div class="review-meta">
+        <p><b>Order type:</b> ${labelForType(orderType)}</p>
+        <p><b>${orderType === 'dine-in' ? 'Table #' : 'Name'}:</b> ${escapeHtml(contactValue)}</p>
+        <p><b>Payment:</b> ${paymentMethod}</p>
+      </div>
+      <div id="submitError"></div>
+    `;
+    primary.textContent = 'Submit Order';
+    primary.disabled = false;
+    primary.onclick = handleSubmitOrder;
+  }
+}
+
+function orderTypeCard(value, label, emoji) {
+  const active = orderType === value;
+  return `
+    <button onclick="selectOrderType('${value}')" class="type-card ${active ? 'active' : ''}">
+      <span class="type-emoji">${emoji}</span>
+      <span class="type-label ${active ? 'active' : ''}">${label}</span>
+    </button>`;
+}
+function selectOrderType(v) { orderType = v; contactValue = ''; renderStep(); }
+function labelForType(v){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'pickup':'Pickup' }[v] || v; }
+
+function renderContactField() {
+  const wrap = document.getElementById('contactField');
+  if (!wrap) return;
+  const label = orderType === 'dine-in' ? 'Table number' : 'Your name';
+  const type = orderType === 'dine-in' ? 'tel' : 'text';
+  wrap.innerHTML = orderType ? `
+    <label class="field-label">${label}</label>
+    <input id="contactInput" type="${type}" value="${escapeHtml(contactValue)}" class="text-input"
+      placeholder="${orderType === 'dine-in' ? 'e.g. 12' : 'e.g. Juan Dela Cruz'}">
+  ` : '';
+  const input = document.getElementById('contactInput');
+  if (input) {
+    input.addEventListener('input', function () {
+      contactValue = input.value;
+      document.getElementById('checkoutPrimaryBtn').disabled = !contactValue.trim();
+    });
+  }
+}
+
+function paymentCard(value, emoji, sub) {
+  const active = paymentMethod === value;
+  return `
+    <button onclick="selectPayment('${value}')" class="pay-card ${active ? 'active' : ''}">
+      <span class="pay-emoji">${emoji}</span>
+      <span class="flex-1">
+        <span class="pay-name ${active ? 'active' : ''}">${value}</span>
+        <span class="pay-sub">${sub}</span>
+      </span>
+      <span class="radio-outer ${active ? 'active' : ''}">
+        ${active ? '<span class="radio-inner"></span>' : ''}
+      </span>
+    </button>`;
+}
+function selectPayment(v) { paymentMethod = v; renderStep(); }
+
+/* ======================================================================
+   SUBMIT ORDER
+   ====================================================================== */
+async function handleSubmitOrder() {
+  const btn = document.getElementById('checkoutPrimaryBtn');
+  btn.disabled = true;
+  btn.textContent = 'Placing order…';
+  document.getElementById('submitError').textContent = '';
+
+  const items = cartArray().map(c => ({ id: c.item.id, name: c.item.name, price: Number(c.item.price), qty: c.qty }));
+  const subtotal = cartSubtotal();
+  const isCash = paymentMethod === 'Cash';
+
+  const payload = {
+    order_type: orderType,
+    table_number: orderType === 'dine-in' ? contactValue : '',
+    customer_name: orderType !== 'dine-in' ? contactValue : '',
+    items,
+    subtotal,
+    service_charge_percent: 0,
+    service_charge: 0,
+    total: subtotal,
+    payment_method: paymentMethod,
+    paid: !isCash,
+    status: 'new'
+  };
+
+  const { data, error } = await submitOrder(payload);
+
+  if (error) {
+    console.error('Order submit error:', error);
+    document.getElementById('submitError').textContent = 'Something went wrong: ' + error;
+    btn.disabled = false;
+    btn.textContent = 'Submit Order';
+    return;
+  }
+
+  const order = Array.isArray(data) ? data[0] : data;
+  showSuccess(order);
+}
+
+function showSuccess(order) {
+  const body = document.getElementById('checkoutBody');
+  document.getElementById('checkoutBackBtn').style.visibility = 'hidden';
+  document.getElementById('stepDots').innerHTML = '';
+  body.innerHTML = `
+    <div class="success-wrap">
+      <div class="success-icon">✅</div>
+      <h3 class="success-title">Order placed!</h3>
+      <p class="success-sub">Order #${String(order.id).slice(0, 8).toUpperCase()}</p>
+      <p class="success-note">
+        ${order.paid ? "We've marked your order as Paid." : 'Please pay in Cash at the counter.'}
+        Our staff will start preparing it shortly.
+      </p>
+    </div>`;
+  const primary = document.getElementById('checkoutPrimaryBtn');
+  primary.textContent = 'Start New Order';
+  primary.disabled = false;
+  primary.onclick = resetOrder;
+}
+
+function resetOrder() {
+  CART = {}; orderType = null; paymentMethod = null; contactValue = ''; step = 1;
+  renderMenu();
+  refreshCartBar();
+  closeCheckout();
+}
+
+/* ======================================================================
+   BOOT
+   ====================================================================== */
+fetchMenu();
+</script>
+</body>
+</html>
