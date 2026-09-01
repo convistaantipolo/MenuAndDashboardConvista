@@ -6,7 +6,7 @@
 <title>Staff Dashboard</title>
 <style>
   :root{
-    --brand-primary:#c2410c;
+    --brand-primary:#FF741F;
     --brand-dark:#1c1917;
     --brand-bg:#f5f5f4;
     --brand-card:#ffffff;
@@ -28,13 +28,6 @@
   .badge-green{ background:#dcfce7; color:#15803d; }
   .badge-red{ background:#fee2e2; color:#b91c1c; }
 
-  #pinGate{ position:fixed; inset:0; z-index:50; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 24px; text-align:center; }
-  #pinGate h1{ font-size:20px; font-weight:700; margin-bottom:4px; }
-  #pinGate p{ font-size:14px; color:var(--brand-muted); margin-bottom:24px; }
-  #pinInput{ border:1px solid #d6d3d1; border-radius:12px; text-align:center; font-size:24px; letter-spacing:.5em; width:200px; padding:12px; margin-bottom:12px; }
-  #pinGate button{ width:200px; padding:12px; border-radius:12px; font-weight:700; color:#fff; background:var(--brand-primary); }
-  #pinError{ color:#dc2626; font-size:14px; margin-top:12px; white-space:pre-wrap; max-width:280px; }
-
   header{ position:sticky; top:0; z-index:20; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.06); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
   header h1{ font-size:17px; font-weight:700; }
   #liveStatus{ font-size:12px; color:#a8a29e; }
@@ -55,27 +48,21 @@
 
   .order-card{ box-shadow:0 1px 2px rgba(0,0,0,.06); border:1px solid var(--brand-border); padding:12px; }
   .order-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .order-number{ font-weight:700; font-size:13px; color:var(--brand-primary); margin-bottom:2px; }
   .order-who{ font-weight:700; font-size:14px; }
   .order-time{ font-size:11px; color:#a8a29e; }
   .order-items{ border-top:1px solid #f0efee; border-bottom:1px solid #f0efee; padding:6px 0; margin:6px 0; }
   .order-item-row{ display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
   .order-item-row .p{ color:var(--brand-muted); }
-  .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; }
+  .totals-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--brand-muted); padding:1px 0; }
+  .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:4px; }
   .action-btn{ width:100%; margin-top:8px; padding:9px; border-radius:8px; font-size:13px; font-weight:700; color:#fff; }
   .action-btn.undo{ color:var(--brand-muted); background:#f0efee; font-weight:600; padding:7px; font-size:12px; }
 </style>
 </head>
 <body>
 
-<div id="pinGate">
-  <h1>Staff Access</h1>
-  <p>Enter staff PIN to continue</p>
-  <input id="pinInput" type="tel" inputmode="numeric" maxlength="6" placeholder="••••">
-  <button onclick="checkPin()">Enter</button>
-  <p id="pinError" class="hidden"></p>
-</div>
-
-<div id="dashboard" class="hidden">
+<div id="dashboard">
   <header>
     <div>
       <h1>Kitchen / Order Board</h1>
@@ -148,35 +135,11 @@ function restRequest(path, method, body, extraHeaders) {
 const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /* ======================================================================
-   PIN GATE
+   No PIN gate — this page loads straight into the dashboard. Access
+   control instead relies on this URL not being shared or linked from
+   the customer-facing app (see note at the bottom of this file).
    ====================================================================== */
-async function checkPin() {
-  const entered = document.getElementById('pinInput').value.trim();
-  const errEl = document.getElementById('pinError');
-  errEl.classList.add('hidden');
-
-  const { data, error } = await restRequest('/app_settings?select=admin_pin', 'GET');
-
-  if (error) {
-    errEl.textContent = 'Could not verify PIN: ' + error;
-    errEl.classList.remove('hidden');
-    return;
-  }
-  const row = Array.isArray(data) ? data[0] : data;
-  if (entered && row && entered === row.admin_pin) {
-    sessionStorage.setItem('staff_authed', '1');
-    enterDashboard();
-  } else {
-    errEl.textContent = 'Incorrect PIN. Try again.';
-    errEl.classList.remove('hidden');
-  }
-}
-function enterDashboard() {
-  document.getElementById('pinGate').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  boot();
-}
-if (sessionStorage.getItem('staff_authed') === '1') enterDashboard();
+boot();
 
 /* ======================================================================
    ORDER LOADING
@@ -245,6 +208,17 @@ function orderCard(o) {
     ? `<span class="badge badge-green">PAID</span>`
     : `<span class="badge badge-red">UNPAID</span>`;
 
+  const subtotal = Number(o.subtotal || 0);
+  const serviceCharge = Number(o.service_charge || 0);
+  const totalsHtml = `
+    ${serviceCharge > 0 ? `
+      <div class="totals-row"><span>Subtotal</span><span>${peso(subtotal)}</span></div>
+      <div class="totals-row"><span>Service Charge</span><span>${peso(serviceCharge)}</span></div>
+    ` : ''}
+    <div class="order-bottom">
+      <span>${escapeHtml(o.payment_method || '—')}</span><span>${peso(o.total)}</span>
+    </div>`;
+
   let actionBtn = '';
   if (o.status === 'new') {
     actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn" style="background:var(--col-preparing)">Mark as Preparing</button>`;
@@ -258,19 +232,19 @@ function orderCard(o) {
     <div class="card order-card">
       <div class="order-top">
         <div>
+          <p class="order-number">${formatOrderNumber(o.order_number)}</p>
           <p class="order-who">${labelType(o.order_type)} · ${who}</p>
           <p class="order-time">${timeAgo(o.created_at)}</p>
         </div>
         ${paidBadge}
       </div>
       <div class="order-items">${itemsHtml || '<span style="font-size:12px;color:#a8a29e;">No items</span>'}</div>
-      <div class="order-bottom">
-        <span>${escapeHtml(o.payment_method || '—')}</span><span>${peso(o.total)}</span>
-      </div>
+      ${totalsHtml}
       ${actionBtn}
     </div>`;
 }
 function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'pickup':'Pickup' }[t] || (t || 'Order'); }
+function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
 
 /* ======================================================================
    POLLING (no websockets — simplest possible, works everywhere)
