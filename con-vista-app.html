@@ -181,7 +181,8 @@
   .order-who{ font-weight:700; font-size:14px; }
   .order-time{ font-size:11px; color:#a8a29e; }
   .order-items{ border-top:1px solid #f0efee; border-bottom:1px solid #f0efee; padding:6px 0; margin:6px 0; }
-  .order-item-row{ display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
+  .order-item-row{ display:flex; justify-content:space-between; font-size:12px; padding:2px 4px; border-radius:4px; }
+  .order-item-row.item-row-drink{ background:#dbeafe; }
   .order-item-row .p{ color:var(--brand-muted); }
   .totals-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--brand-muted); padding:1px 0; }
   .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:4px; }
@@ -744,8 +745,8 @@
       </div>`;
   }
 
-  function addCartLine(key, name, price, delta) {
-    if (!cart[key]) cart[key] = { name, price, qty: 0 };
+  function addCartLine(key, name, price, category, delta) {
+    if (!cart[key]) cart[key] = { name, price, category, qty: 0 };
     cart[key].qty += delta;
     if (cart[key].qty <= 0) delete cart[key];
   }
@@ -758,7 +759,7 @@
       openFlavorPicker(id);
       return;
     }
-    addCartLine(id, item.name, item.price, 1);
+    addCartLine(id, item.name, item.price, item.category, 1);
     refreshItemBox(id);
     updateCartBar();
   }
@@ -808,7 +809,7 @@
     const item = MENU_ITEMS.find(i => i.id === pendingFlavorItemId);
     const key = pendingFlavorItemId + '::' + pendingFlavorChoice;
     const name = item.name + ' (' + pendingFlavorChoice + ')';
-    addCartLine(key, name, item.price, 1);
+    addCartLine(key, name, item.price, item.category, 1);
     refreshItemBox(pendingFlavorItemId);
     updateCartBar();
     closeFlavorModal();
@@ -1281,7 +1282,7 @@
     btn.disabled = true;
     btn.textContent = 'Placing order…';
 
-    const items = Object.values(cart).map(i => ({ name: i.name, price: i.price, qty: i.qty }));
+    const items = Object.values(cart).map(i => ({ name: i.name, price: i.price, qty: i.qty, category: i.category }));
     const { subtotal, serviceCharge, total } = computeCharges();
     const isPaid = paymentMethod !== 'Cash';
     const capturedProof = gcashProofDataUrl;
@@ -1541,9 +1542,15 @@ function timeAgo(iso) {
   return hrs + 'h ' + (mins % 60) + 'm ago';
 }
 
+const DRINK_CATEGORIES = new Set([
+  'Cocktails and Beers', 'Classic Coffees', 'Cafe Frappe', 'Matcha Edition',
+  'Non-Coffee Drinks', 'Other Drinks', 'Towers'
+]);
+function isDrinkCategory(cat) { return DRINK_CATEGORIES.has(cat); }
+
 function orderCard(o) {
   const items = Array.isArray(o.items) ? o.items : [];
-  const itemsHtml = items.map(it => `<div class="order-item-row">
+  const itemsHtml = items.map(it => `<div class="order-item-row ${isDrinkCategory(it.category) ? 'item-row-drink' : ''}">
       <span>${it.qty}× ${escapeHtml(it.name)}</span>
     </div>`).join('');
   const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
@@ -1611,16 +1618,16 @@ function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).pad
 // the same line across repeated board refreshes, while different orders
 // naturally get variety.
 const KITCHEN_PRAISE = [
-  'Well-done, kitchen team! 👍',
-  'Nailed it! 🔥',
-  'Order crushed! 💪',
-  "Chef's kiss! 👌",
-  'Kitchen magic! ✨',
-  'Boom, served! 🎉',
-  'Smooth and swift! ⚡',
-  'Another one nailed! 🙌',
-  'Great work, team! 🌟',
-  'Served with pride! 🍽️'
+  'Sa order, hindi ka sinayang — good job! ☕✨',
+  'Parang crush, mabilis ka lang mag-move on. Next order, ready ka na! 🔥',
+  'Wala kang katulad — order tapos, ang bilis mo pa! 💪',
+  'Hindi lahat ng hinihintay, nakakapagod — pero \'to, sulit! Great job! 👏',
+  'Kasing sarap ng brewed mo, ganyan ka rin ka-solid! 🌟',
+  'Panalo tayo dito — walang iyakan, tapos na ang order! 🎉',
+  'Parang tamang timing — walang sayang na minuto. Nailed it! ⏱️',
+  "'Di man nag-espresso ang buhay, pero 'to, on point! ☕👍",
+  'Order done, parang batman — laging nandyan pag kailangan! 💯',
+  'Sa dami ng pinaghirapan, ito na \'yong panalo! Good job, barista! 🥤🎊'
 ];
 function praiseForOrder(orderNumber) {
   const n = Number(orderNumber) || 0;

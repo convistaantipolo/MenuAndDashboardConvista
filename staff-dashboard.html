@@ -55,7 +55,8 @@
   .order-who{ font-weight:700; font-size:14px; }
   .order-time{ font-size:11px; color:#a8a29e; }
   .order-items{ border-top:1px solid #f0efee; border-bottom:1px solid #f0efee; padding:6px 0; margin:6px 0; }
-  .order-item-row{ display:flex; justify-content:space-between; font-size:12px; padding:2px 0; }
+  .order-item-row{ display:flex; justify-content:space-between; font-size:12px; padding:2px 4px; border-radius:4px; }
+  .order-item-row.item-row-drink{ background:#dbeafe; }
   .order-item-row .p{ color:var(--brand-muted); }
   .totals-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--brand-muted); padding:1px 0; }
   .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:4px; }
@@ -228,9 +229,15 @@ function timeAgo(iso) {
   return hrs + 'h ' + (mins % 60) + 'm ago';
 }
 
+const DRINK_CATEGORIES = new Set([
+  'Cocktails and Beers', 'Classic Coffees', 'Cafe Frappe', 'Matcha Edition',
+  'Non-Coffee Drinks', 'Other Drinks', 'Towers'
+]);
+function isDrinkCategory(cat) { return DRINK_CATEGORIES.has(cat); }
+
 function orderCard(o) {
   const items = Array.isArray(o.items) ? o.items : [];
-  const itemsHtml = items.map(it => `<div class="order-item-row">
+  const itemsHtml = items.map(it => `<div class="order-item-row ${isDrinkCategory(it.category) ? 'item-row-drink' : ''}">
       <span>${it.qty}× ${escapeHtml(it.name)}</span>
     </div>`).join('');
   const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
@@ -294,16 +301,16 @@ function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'picku
 function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
 
 const KITCHEN_PRAISE = [
-  'Well-done, kitchen team! 👍',
-  'Nailed it! 🔥',
-  'Order crushed! 💪',
-  "Chef's kiss! 👌",
-  'Kitchen magic! ✨',
-  'Boom, served! 🎉',
-  'Smooth and swift! ⚡',
-  'Another one nailed! 🙌',
-  'Great work, team! 🌟',
-  'Served with pride! 🍽️'
+  'Sa order, hindi ka sinayang — good job! ☕✨',
+  'Parang crush, mabilis ka lang mag-move on. Next order, ready ka na! 🔥',
+  'Wala kang katulad — order tapos, ang bilis mo pa! 💪',
+  'Hindi lahat ng hinihintay, nakakapagod — pero \'to, sulit! Great job! 👏',
+  'Kasing sarap ng brewed mo, ganyan ka rin ka-solid! 🌟',
+  'Panalo tayo dito — walang iyakan, tapos na ang order! 🎉',
+  'Parang tamang timing — walang sayang na minuto. Nailed it! ⏱️',
+  "'Di man nag-espresso ang buhay, pero 'to, on point! ☕👍",
+  'Order done, parang batman — laging nandyan pag kailangan! 💯',
+  'Sa dami ng pinaghirapan, ito na \'yong panalo! Good job, barista! 🥤🎊'
 ];
 function praiseForOrder(orderNumber) {
   const n = Number(orderNumber) || 0;
