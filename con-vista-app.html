@@ -153,7 +153,7 @@
   .col-count{ color:#a8a29e; font-weight:400; }
   .order-list{ display:flex; flex-direction:column; gap:12px; }
   .empty-col{ font-size:12px; color:#a8a29e; font-style:italic; padding:16px 0; text-align:center; }
-  .completed-caption{ font-size:13px; font-weight:700; color:var(--col-completed); text-align:center; padding:10px 0; }
+  .completed-caption{ font-size:13px; font-weight:700; color:var(--col-completed); padding:2px 0 6px; }
 
   @media (min-width:900px){
     main{ display:grid; grid-template-columns:1fr 1fr 1fr; overflow-x:visible; }
@@ -1350,13 +1350,9 @@ function renderBoard() {
   STATUS_COLS.forEach(status => {
     const list = ORDERS.filter(o => o.status === status);
     document.getElementById('count-' + status).textContent = `(${list.length})`;
-    let html = list.length
+    document.getElementById('col-' + status).innerHTML = list.length
       ? list.map(orderCard).join('')
       : `<p class="empty-col">No orders</p>`;
-    if (status === 'served' && list.length > 0) {
-      html = `<p class="completed-caption">Well-done, kitchen team! 👍</p>` + html;
-    }
-    document.getElementById('col-' + status).innerHTML = html;
   });
 }
 
@@ -1398,6 +1394,7 @@ function orderCard(o) {
         </div>
         ${paidBadge}
       </div>
+      ${o.status === 'served' ? `<p class="completed-caption">${praiseForOrder(o.order_number)}</p>` : ''}
       <div class="order-items">${itemsHtml || '<span style="font-size:12px;color:#a8a29e;">No items</span>'}</div>
       <div class="order-bottom">
         <span>${escapeHtml(o.payment_method || '—')}</span>
@@ -1407,6 +1404,27 @@ function orderCard(o) {
 }
 function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'pickup':'Pickup' }[t] || (t || 'Order'); }
 function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
+
+// A rotating set of celebratory lines shown per completed order. Picked
+// deterministically from the order number, so a given order always shows
+// the same line across repeated board refreshes, while different orders
+// naturally get variety.
+const KITCHEN_PRAISE = [
+  'Well-done, kitchen team! 👍',
+  'Nailed it! 🔥',
+  'Order crushed! 💪',
+  "Chef's kiss! 👌",
+  'Kitchen magic! ✨',
+  'Boom, served! 🎉',
+  'Smooth and swift! ⚡',
+  'Another one nailed! 🙌',
+  'Great work, team! 🌟',
+  'Served with pride! 🍽️'
+];
+function praiseForOrder(orderNumber) {
+  const n = Number(orderNumber) || 0;
+  return KITCHEN_PRAISE[n % KITCHEN_PRAISE.length];
+}
 
 /* ======================================================================
    POLLING (no websockets — simplest possible, works everywhere)
