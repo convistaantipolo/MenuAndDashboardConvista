@@ -300,21 +300,21 @@ function updatePrepTimers() {
 function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'pickup':'Pickup' }[t] || (t || 'Order'); }
 function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
 
-const KITCHEN_PRAISE = [
-  'Well-done, kitchen team! 👍',
-  'Nailed it! 🔥',
-  'Order crushed! 💪',
-  "Chef's kiss! 👌",
-  'Kitchen magic! ✨',
-  'Boom, served! 🎉',
-  'Smooth and swift! ⚡',
-  'Another one nailed! 🙌',
-  'Great work, team! 🌟',
-  'Served with pride! 🍽️'
+const BARISTA_PRAISE = [
+  'Sa order, hindi ka sinayang — good job! ☕✨',
+  'Parang crush, mabilis ka lang mag-move on. Next order, ready ka na! 🔥',
+  'Wala kang katulad — order tapos, ang bilis mo pa! 💪',
+  'Hindi lahat ng hinihintay, nakakapagod — pero \'to, sulit! Great job! 👏',
+  'Kasing sarap ng brewed mo, ganyan ka rin ka-solid! 🌟',
+  'Panalo tayo dito — walang iyakan, tapos na ang order! 🎉',
+  'Parang tamang timing — walang sayang na minuto. Nailed it! ⏱️',
+  "'Di man nag-espresso ang buhay, pero 'to, on point! ☕👍",
+  'Order done, parang batman — laging nandyan pag kailangan! 💯',
+  'Sa dami ng pinaghirapan, ito na \'yong panalo! Good job, barista! 🥤🎊'
 ];
 function praiseForOrder(orderNumber) {
   const n = Number(orderNumber) || 0;
-  return KITCHEN_PRAISE[n % KITCHEN_PRAISE.length];
+  return BARISTA_PRAISE[n % BARISTA_PRAISE.length];
 }
 
 /* ======================================================================
