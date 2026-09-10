@@ -59,9 +59,6 @@
   .order-item-row .p{ color:var(--brand-muted); }
   .totals-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--brand-muted); padding:1px 0; }
   .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:4px; }
-  .order-proof{ margin-top:8px; }
-  .order-proof-label{ font-size:11px; font-weight:600; color:var(--brand-muted); margin-bottom:4px; }
-  .order-proof-img{ width:100%; max-height:160px; object-fit:contain; border-radius:8px; border:1px solid var(--brand-border); background:#fafaf9; }
   .action-btn{ width:100%; margin-top:8px; padding:9px; border-radius:8px; font-size:13px; font-weight:700; color:#fff; }
   .action-btn.undo{ color:var(--brand-muted); background:#f0efee; font-weight:600; padding:7px; font-size:12px; }
   .completed-actions{ display:flex; gap:8px; margin-top:8px; }
@@ -276,11 +273,6 @@ function orderCard(o) {
       <div class="order-bottom">
         <span>${escapeHtml(o.payment_method || '—')}</span>
       </div>
-      ${o.proof_of_payment ? `
-        <div class="order-proof">
-          <p class="order-proof-label">Proof of Payment</p>
-          <img src="${o.proof_of_payment}" alt="Proof of payment" class="order-proof-img">
-        </div>` : ''}
       ${actionBtn}
     </div>`;
 }
