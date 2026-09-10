@@ -154,6 +154,8 @@
   .order-list{ display:flex; flex-direction:column; gap:12px; }
   .empty-col{ font-size:12px; color:#a8a29e; font-style:italic; padding:16px 0; text-align:center; }
   .completed-caption{ font-size:13px; font-weight:700; color:var(--col-completed); padding:2px 0 6px; }
+  .prep-timer-row{ font-size:13px; font-weight:700; color:var(--col-preparing); padding:2px 0 6px; font-variant-numeric:tabular-nums; }
+  .prep-timer-row.prep-timer-done{ color:var(--brand-muted); font-weight:600; }
 
   @media (min-width:900px){
     main{ display:grid; grid-template-columns:1fr 1fr 1fr; overflow-x:visible; }
@@ -172,6 +174,9 @@
   .order-bottom{ display:flex; justify-content:space-between; font-weight:700; font-size:14px; margin-top:4px; }
   .action-btn{ width:100%; margin-top:8px; padding:9px; border-radius:8px; font-size:13px; font-weight:700; color:#fff; }
   .action-btn.undo{ color:var(--brand-muted); background:#f0efee; font-weight:600; padding:7px; font-size:12px; }
+  .completed-actions{ display:flex; gap:8px; margin-top:8px; }
+  .completed-actions .action-btn{ margin-top:0; flex:1; width:auto; }
+  .action-btn.close-btn{ color:#b91c1c; background:#fee2e2; font-weight:600; padding:7px; font-size:12px; }
 
 </style>
 </head>
@@ -1314,6 +1319,7 @@ const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFracti
 const STATUS_COLS = ['new', 'preparing', 'served'];
 let ORDERS = [];
 let pollTimer = null;
+let tickTimer = null;
 
 async function loadOrders() {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -1331,11 +1337,36 @@ async function loadOrders() {
 }
 
 async function updateOrderStatus(id, newStatus) {
+  const order = ORDERS.find(o => o.id === id);
+  const payload = { status: newStatus };
+  const nowIso = new Date().toISOString();
+
+  // Only stamp accepted_at on a genuine Accept (new -> preparing) — an Undo
+  // from Completed back to Preparing should NOT reset the original start
+  // time, since the food was already being worked on before that.
+  if (newStatus === 'preparing' && order && order.status === 'new') {
+    payload.accepted_at = nowIso;
+  }
+  if (newStatus === 'served') {
+    payload.completed_at = nowIso;
+  }
+  if (newStatus === 'preparing' && order && order.status === 'served') {
+    payload.completed_at = null; // Undo — no longer completed
+  }
+
   const path = '/orders?id=eq.' + encodeURIComponent(id);
-  const { error } = await restRequest(path, 'PATCH', { status: newStatus }, { 'Prefer': 'return=minimal' });
+  const { error } = await restRequest(path, 'PATCH', payload, { 'Prefer': 'return=minimal' });
   if (error) { console.error('Update error:', error); alert('Could not update order:\n' + error); return; }
-  const idx = ORDERS.findIndex(o => o.id === id);
-  if (idx > -1) ORDERS[idx].status = newStatus;
+  if (order) Object.assign(order, payload);
+  renderBoard();
+}
+
+async function closeOrder(id) {
+  if (!confirm("Remove this completed order from the board? This can't be undone.")) return;
+  const path = '/orders?id=eq.' + encodeURIComponent(id);
+  const { error } = await restRequest(path, 'DELETE', null, { 'Prefer': 'return=minimal' });
+  if (error) { console.error('Delete error:', error); alert('Could not remove order:\n' + error); return; }
+  ORDERS = ORDERS.filter(o => o.id !== id);
   renderBoard();
 }
 
@@ -1354,6 +1385,7 @@ function renderBoard() {
       ? list.map(orderCard).join('')
       : `<p class="empty-col">No orders</p>`;
   });
+  updatePrepTimers(); // paint the correct elapsed time immediately, don't wait for the next 1s tick
 }
 
 function timeAgo(iso) {
@@ -1381,8 +1413,18 @@ function orderCard(o) {
   } else if (o.status === 'preparing') {
     actionBtn = `<button onclick="updateOrderStatus('${o.id}','served')" class="action-btn" style="background:var(--col-completed)">Complete</button>`;
   } else {
-    actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn undo">Undo</button>`;
+    actionBtn = `
+      <div class="completed-actions">
+        <button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn undo">Undo</button>
+        <button onclick="closeOrder('${o.id}')" class="action-btn close-btn">Close</button>
+      </div>`;
   }
+
+  const timerHtml = o.status === 'preparing' && o.accepted_at
+    ? `<p class="prep-timer-row">⏱ <span class="prep-timer" data-accepted="${o.accepted_at}">00:00</span></p>`
+    : o.status === 'served'
+      ? `<p class="prep-timer-row prep-timer-done">⏱ Prep time: ${o.accepted_at && o.completed_at ? formatDuration(new Date(o.completed_at) - new Date(o.accepted_at)) : '—'}</p>`
+      : '';
 
   return `
     <div class="card order-card">
@@ -1395,12 +1437,27 @@ function orderCard(o) {
         ${paidBadge}
       </div>
       ${o.status === 'served' ? `<p class="completed-caption">${praiseForOrder(o.order_number)}</p>` : ''}
+      ${timerHtml}
       <div class="order-items">${itemsHtml || '<span style="font-size:12px;color:#a8a29e;">No items</span>'}</div>
       <div class="order-bottom">
         <span>${escapeHtml(o.payment_method || '—')}</span>
       </div>
       ${actionBtn}
     </div>`;
+}
+function formatDuration(ms) {
+  if (!Number.isFinite(ms) || ms < 0) ms = 0;
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function updatePrepTimers() {
+  document.querySelectorAll('.prep-timer[data-accepted]').forEach(el => {
+    const acceptedAt = el.getAttribute('data-accepted');
+    if (!acceptedAt) return;
+    el.textContent = formatDuration(Date.now() - new Date(acceptedAt).getTime());
+  });
 }
 function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'pickup':'Pickup' }[t] || (t || 'Order'); }
 function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
@@ -1433,6 +1490,8 @@ function boot() {
   loadOrders();
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(loadOrders, 8000);
+  if (tickTimer) clearInterval(tickTimer);
+  tickTimer = setInterval(updatePrepTimers, 1000);
 }
 
 if (location.hash === '#staff') { boot(); }
@@ -1441,6 +1500,7 @@ if (location.hash === '#staff') { boot(); }
   if (location.hash === '#staff') {
     window.loadOrders = loadOrders;
     window.updateOrderStatus = updateOrderStatus;
+    window.closeOrder = closeOrder;
   }
 })();
 </script>
