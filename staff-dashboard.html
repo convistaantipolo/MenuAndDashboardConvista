@@ -137,9 +137,9 @@ const peso = n => '₱' + Number(n || 0).toLocaleString('en-PH', { minimumFracti
 /* ======================================================================
    No PIN gate — this page loads straight into the dashboard. Access
    control instead relies on this URL not being shared or linked from
-   the customer-facing app (see note at the bottom of this file).
+   the customer-facing app. boot() is called at the very end of this
+   script, once everything it depends on has been declared.
    ====================================================================== */
-boot();
 
 /* ======================================================================
    ORDER LOADING
@@ -221,9 +221,9 @@ function orderCard(o) {
 
   let actionBtn = '';
   if (o.status === 'new') {
-    actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn" style="background:var(--col-preparing)">Mark as Preparing</button>`;
+    actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn" style="background:var(--col-preparing)">Accept</button>`;
   } else if (o.status === 'preparing') {
-    actionBtn = `<button onclick="updateOrderStatus('${o.id}','served')" class="action-btn" style="background:var(--col-completed)">Mark as Completed</button>`;
+    actionBtn = `<button onclick="updateOrderStatus('${o.id}','served')" class="action-btn" style="background:var(--col-completed)">Complete</button>`;
   } else {
     actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn undo">Undo</button>`;
   }
@@ -254,6 +254,8 @@ function boot() {
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(loadOrders, 8000);
 }
+
+boot();
 </script>
 </body>
 </html>

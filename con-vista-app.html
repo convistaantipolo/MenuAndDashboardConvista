@@ -1387,9 +1387,9 @@ function orderCard(o) {
 
   let actionBtn = '';
   if (o.status === 'new') {
-    actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn" style="background:var(--col-preparing)">Mark as Preparing</button>`;
+    actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn" style="background:var(--col-preparing)">Accept</button>`;
   } else if (o.status === 'preparing') {
-    actionBtn = `<button onclick="updateOrderStatus('${o.id}','served')" class="action-btn" style="background:var(--col-completed)">Mark as Completed</button>`;
+    actionBtn = `<button onclick="updateOrderStatus('${o.id}','served')" class="action-btn" style="background:var(--col-completed)">Complete</button>`;
   } else {
     actionBtn = `<button onclick="updateOrderStatus('${o.id}','preparing')" class="action-btn undo">Undo</button>`;
   }
