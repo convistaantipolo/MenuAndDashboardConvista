@@ -635,8 +635,8 @@
       </div>`;
   }
 
-  function addCartLine(key, name, price, delta) {
-    if (!cart[key]) cart[key] = { name, price, qty: 0 };
+  function addCartLine(key, name, price, category, delta) {
+    if (!cart[key]) cart[key] = { name, price, category, qty: 0 };
     cart[key].qty += delta;
     if (cart[key].qty <= 0) delete cart[key];
   }
@@ -649,7 +649,7 @@
       openFlavorPicker(id);
       return;
     }
-    addCartLine(id, item.name, item.price, 1);
+    addCartLine(id, item.name, item.price, item.category, 1);
     refreshItemBox(id);
     updateCartBar();
   }
@@ -699,7 +699,7 @@
     const item = MENU_ITEMS.find(i => i.id === pendingFlavorItemId);
     const key = pendingFlavorItemId + '::' + pendingFlavorChoice;
     const name = item.name + ' (' + pendingFlavorChoice + ')';
-    addCartLine(key, name, item.price, 1);
+    addCartLine(key, name, item.price, item.category, 1);
     refreshItemBox(pendingFlavorItemId);
     updateCartBar();
     closeFlavorModal();
@@ -1172,7 +1172,7 @@
     btn.disabled = true;
     btn.textContent = 'Placing order…';
 
-    const items = Object.values(cart).map(i => ({ name: i.name, price: i.price, qty: i.qty }));
+    const items = Object.values(cart).map(i => ({ name: i.name, price: i.price, qty: i.qty, category: i.category }));
     const { subtotal, serviceCharge, total } = computeCharges();
     const isPaid = paymentMethod !== 'Cash';
     const capturedProof = gcashProofDataUrl;
