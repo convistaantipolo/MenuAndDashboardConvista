@@ -301,16 +301,16 @@ function labelType(t){ return { 'dine-in':'Dine-In', 'takeout':'Takeout', 'picku
 function formatOrderNumber(n) { return n == null ? '—' : 'CV-' + String(n).padStart(6, '0'); }
 
 const KITCHEN_PRAISE = [
-  'Sa order, hindi ka sinayang — good job! ☕✨',
-  'Parang crush, mabilis ka lang mag-move on. Next order, ready ka na! 🔥',
-  'Wala kang katulad — order tapos, ang bilis mo pa! 💪',
-  'Hindi lahat ng hinihintay, nakakapagod — pero \'to, sulit! Great job! 👏',
-  'Kasing sarap ng brewed mo, ganyan ka rin ka-solid! 🌟',
+  'Sa order, hindi ka sinayang — good job, chef! 🍳✨',
+  'Parang crush, mabilis kang nag-move on sa next order! 🔥',
+  'Wala kang katulad — luto tapos, ang bilis mo pa! 💪',
+  'Hindi lahat ng hinihintay, nakakagutom — pero \'to, sulit! Great job! 👏',
+  'Kasing sarap ng luto mo, ganyan ka rin ka-solid! 🌟',
   'Panalo tayo dito — walang iyakan, tapos na ang order! 🎉',
-  'Parang tamang timing — walang sayang na minuto. Nailed it! ⏱️',
-  "'Di man nag-espresso ang buhay, pero 'to, on point! ☕👍",
-  'Order done, parang batman — laging nandyan pag kailangan! 💯',
-  'Sa dami ng pinaghirapan, ito na \'yong panalo! Good job, barista! 🥤🎊'
+  'Parang tamang timing sa pagluluto — walang sunog, walang sayang! Nailed it! ⏱️',
+  "'Di man perfect ang buhay, pero 'to, sakto sa timpla! 🍲👍",
+  'Order done, parang chef sa TV — ang linis ng galaw! 💯',
+  'Sa dami ng pinaghirapan sa kusina, ito na \'yong panalo! Good job, kitchen team! 🍽️🎊'
 ];
 function praiseForOrder(orderNumber) {
   const n = Number(orderNumber) || 0;
