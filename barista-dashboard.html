@@ -238,7 +238,7 @@ function isFoodCategory(cat) { return FOOD_CATEGORIES.has(cat); }
 function orderCard(o) {
   const items = Array.isArray(o.items) ? o.items : [];
   const itemsHtml = items.map(it => `<div class="order-item-row ${isFoodCategory(it.category) ? 'item-row-food' : ''}">
-      <span>${it.qty}× ${escapeHtml(it.name)}</span>
+      <span>${it.qty}× ${escapeHtml(it.name)}${isFoodCategory(it.category) ? ' 🍴' : ''}</span>
     </div>`).join('');
   const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
   const paidBadge = o.paid
