@@ -40,6 +40,7 @@
   .col-count{ color:#a8a29e; font-weight:400; }
   .order-list{ display:flex; flex-direction:column; gap:12px; }
   .empty-col{ font-size:12px; color:#a8a29e; font-style:italic; padding:16px 0; text-align:center; }
+  .completed-caption{ font-size:13px; font-weight:700; color:var(--col-completed); text-align:center; padding:10px 0; }
 
   @media (min-width:900px){
     main{ display:grid; grid-template-columns:1fr 1fr 1fr; overflow-x:visible; }
@@ -183,9 +184,13 @@ function renderBoard() {
   STATUS_COLS.forEach(status => {
     const list = ORDERS.filter(o => o.status === status);
     document.getElementById('count-' + status).textContent = `(${list.length})`;
-    document.getElementById('col-' + status).innerHTML = list.length
+    let html = list.length
       ? list.map(orderCard).join('')
       : `<p class="empty-col">No orders</p>`;
+    if (status === 'served' && list.length > 0) {
+      html = `<p class="completed-caption">Well-done, kitchen team! 👍</p>` + html;
+    }
+    document.getElementById('col-' + status).innerHTML = html;
   });
 }
 
@@ -201,23 +206,12 @@ function timeAgo(iso) {
 function orderCard(o) {
   const items = Array.isArray(o.items) ? o.items : [];
   const itemsHtml = items.map(it => `<div class="order-item-row">
-      <span>${it.qty}× ${escapeHtml(it.name)}</span><span class="p">${peso(it.qty * it.price)}</span>
+      <span>${it.qty}× ${escapeHtml(it.name)}</span>
     </div>`).join('');
   const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
   const paidBadge = o.paid
     ? `<span class="badge badge-green">PAID</span>`
     : `<span class="badge badge-red">UNPAID</span>`;
-
-  const subtotal = Number(o.subtotal || 0);
-  const serviceCharge = Number(o.service_charge || 0);
-  const totalsHtml = `
-    ${serviceCharge > 0 ? `
-      <div class="totals-row"><span>Subtotal</span><span>${peso(subtotal)}</span></div>
-      <div class="totals-row"><span>Service Charge</span><span>${peso(serviceCharge)}</span></div>
-    ` : ''}
-    <div class="order-bottom">
-      <span>${escapeHtml(o.payment_method || '—')}</span><span>${peso(o.total)}</span>
-    </div>`;
 
   let actionBtn = '';
   if (o.status === 'new') {
@@ -239,7 +233,9 @@ function orderCard(o) {
         ${paidBadge}
       </div>
       <div class="order-items">${itemsHtml || '<span style="font-size:12px;color:#a8a29e;">No items</span>'}</div>
-      ${totalsHtml}
+      <div class="order-bottom">
+        <span>${escapeHtml(o.payment_method || '—')}</span>
+      </div>
       ${actionBtn}
     </div>`;
 }
