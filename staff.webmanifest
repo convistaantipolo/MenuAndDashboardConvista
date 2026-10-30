@@ -1,0 +1,16 @@
+{
+  "name": "Con Vista Rewards Staff",
+  "short_name": "CV Staff",
+  "description": "Scan Duo Rewards Cards, add stamps and claim rewards.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#F26A0F",
+  "icons": [
+    { "src": "/staff-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/staff-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/staff-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

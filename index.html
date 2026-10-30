@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#241A14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CV Staff">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" sizes="180x180" href="/staff-icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/staff-favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/staff-icon-192.png">
+<link rel="manifest" href="/staff.webmanifest">
+<title>Points scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+  :root{
+    --brand:#E8731C; --ink:#241A14; --paper:#F3F4F1; --ok:#2E7D4F; --bad:#B3261E;
+    --muted:rgba(36,26,20,.62); --line:rgba(36,26,20,.12); --soft:rgba(36,26,20,.05);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{box-sizing:inherit}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font:400 16px/1.5 Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+  [hidden]{display:none!important}
+  button,input,select{font:inherit;color:inherit}
+  input,select{font-size:16px;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--brand)}
+  :focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+  label{display:block;font-size:14px;font-weight:500;margin:14px 0 6px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 18px;font-weight:600;cursor:pointer;background:var(--ink);color:#fff;min-height:48px}
+  .btn.brand{background:var(--brand)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn.small{min-height:38px;padding:7px 12px;font-size:14px}
+  .btn.danger{background:transparent;color:var(--bad);border:1.5px solid rgba(179,38,30,.3)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .wide{width:100%}
+  .muted{color:var(--muted)}
+  .wrap{max-width:560px;margin:0 auto;padding:18px}
+
+  /* top bar */
+  .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ink);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ink)}
+  .top .who{flex:1;min-width:0;line-height:1.25}
+  .top .who b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top .who span{font-size:13px;color:rgba(255,255,255,.7)}
+  .top button{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:500;cursor:pointer}
+  .top button.on{background:var(--brand)}
+
+  /* login */
+  .login{max-width:380px;margin:0 auto;padding:48px 20px}
+  .login h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+  .login .tag{color:var(--brand);font-weight:500;margin:4px 0 30px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;font-weight:500}
+  .chip[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .pin{letter-spacing:.5em;text-align:center;font-size:24px;font-weight:600}
+  .err{color:var(--bad);font-size:14px;margin:10px 0 0;min-height:21px}
+
+  /* scanner */
+  .reader-box{position:relative;background:#000;border-radius:20px;overflow:hidden;aspect-ratio:1/1;max-height:62vh;margin:0 auto}
+  #reader{width:100%;height:100%}
+  #reader video{object-fit:cover!important;width:100%!important;height:100%!important}
+  #reader img[alt="Info icon"],#reader__dashboard{display:none!important}
+  .reader-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;text-align:center;padding:24px}
+  .frame{position:absolute;inset:16%;border:3px solid var(--brand);border-radius:18px;pointer-events:none;box-shadow:0 0 0 999px rgba(0,0,0,.25)}
+  .hint{text-align:center;margin:12px 0 22px;color:var(--muted);font-size:15px}
+  .row{display:flex;gap:8px}
+  .row input{flex:1}
+  .results{list-style:none;margin:8px 0 0;padding:0}
+  .results li button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px;cursor:pointer}
+  .results small{display:block;color:var(--muted);font-size:13px}
+  .section-title{font-size:15px;font-weight:600;margin:22px 0 4px}
+
+  /* which card picker */
+  .prog-label{font-size:14px;font-weight:500;margin:0 0 6px;color:var(--muted)}
+  .prog{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;margin-bottom:12px}
+  .prog button{min-height:58px;border-radius:14px;border:2px solid var(--line);background:#fff;font-weight:600;font-size:17px;cursor:pointer;color:var(--ink)}
+  .prog button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+  .frame-label{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;font-weight:600;padding:6px 16px;border-radius:99px;z-index:2;font-size:15px;white-space:nowrap}
+  .bals{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  .bals > li{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+  .bals > li.hl{border:2px solid var(--brand)}
+  .bal-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .cnt{font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cnt small{display:inline!important;font-size:14px;font-weight:500;color:var(--muted)}
+  .dots{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .dots i{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none}
+  .dots i.on{background:var(--brand);border-color:var(--brand)}
+  .dots i.free{width:auto;border-radius:99px;padding:0 9px;font-style:normal;font-size:11px;font-weight:600;line-height:18px;border-style:dashed;color:var(--muted)}
+  .dots i.free.on{color:#fff;border-style:solid}
+  .meter{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0}
+  .meter i{display:block;height:100%;background:var(--brand)}
+  .lvl{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--soft);margin-left:6px;vertical-align:middle}
+  .lvl.Silver{background:#E9EBEE}.lvl.Gold{background:#FBEFC8}.lvl.Bronze{background:#F6E1D0}
+  .ladder{list-style:none;margin:8px 0 2px;padding:0;font-size:13.5px;line-height:1.35}
+  .ladder li{display:flex;gap:6px;padding:4px 8px;border-radius:8px;color:var(--muted)}
+  .ladder li.cur{background:var(--soft);color:var(--ink);font-weight:600}
+  .ladder li.cur::after{content:"current";margin-left:auto;font-size:11px;font-weight:600;color:var(--brand)}
+  .collect{font-size:13px;color:var(--muted);margin:2px 0 0}
+  .bals small{display:block;color:var(--muted);font-size:14px}
+  .bals .btn{margin-top:8px}
+  .addrow{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .step{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;background:#fff;flex:none}
+  .step button{width:44px;height:46px;border:0;background:transparent;font-size:22px;font-weight:600;cursor:pointer;color:var(--ink)}
+  .step output{min-width:30px;text-align:center;font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+  .addrow .btn{flex:1;margin-top:0}
+
+  /* result sheet */
+  .scrim{position:fixed;inset:0;background:rgba(20,14,10,.5);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:var(--paper);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:24px 24px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
+  @keyframes up{from{transform:translateY(40px);opacity:.4}}
+  @media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+  .hero{display:flex;align-items:flex-end;gap:14px;margin-bottom:6px}
+  .hero .big{font-weight:800;font-size:76px;line-height:.85;letter-spacing:-.04em;color:var(--ok);font-variant-numeric:tabular-nums}
+  .hero.warn .big{color:var(--brand);font-size:44px}
+  .hero.bad .big{color:var(--bad);font-size:44px}
+  .hero p{margin:0 0 4px;font-weight:600;font-size:18px;line-height:1.25}
+  .cust{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:16px 0}
+  .cust b{display:block}
+  .cust small{color:var(--muted)}
+  .bal{text-align:right;font-weight:800;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+  .bal small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+  .rlist{list-style:none;margin:6px 0 0;padding:0}
+  .rlist li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .rlist small{display:block;color:var(--muted);font-size:13px}
+  .actions{display:grid;gap:10px;margin-top:18px}
+  .hist{list-style:none;margin:6px 0 0;padding:0;font-size:14px}
+  .hist li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .hist small{display:block;color:var(--muted);font-size:12px}
+  .hist .undone{text-decoration:line-through;color:var(--muted)}
+  .reg{background:var(--soft);border-radius:16px;padding:4px 14px 14px;margin-top:14px}
+
+  /* admin */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:12px 18px 0;max-width:960px;margin:0 auto;scrollbar-width:none}
+  .tabs button{flex:none;border:0;background:transparent;padding:9px 14px;border-radius:99px;font-weight:500;cursor:pointer;color:var(--muted)}
+  .tabs button[aria-selected=true]{background:var(--ink);color:#fff}
+  .admin{max-width:960px;margin:0 auto;padding:16px 18px 60px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:22px}
+  .stat{background:#fff;padding:14px 16px}
+  .stat b{display:block;font-size:28px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat span{font-size:13px;color:var(--muted)}
+  .tbl-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:16px}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-weight:600;font-size:13px;color:var(--muted);background:var(--soft)}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr.click{cursor:pointer}
+  tr.click:hover td{background:var(--soft)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar input,.toolbar select{width:auto;flex:1;min-width:160px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px 18px 18px;margin-bottom:18px;max-width:560px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  .note{font-size:14px;color:var(--muted);margin:10px 0 0}
+  .pill{display:inline-block;font-size:12px;font-weight:500;padding:2px 9px;border-radius:99px;background:var(--soft)}
+  .pill.off{color:var(--muted)}
+  .pill.m{background:var(--ink);color:#fff}
+
+  dialog{border:0;border-radius:20px;padding:0;width:min(520px,94vw);max-height:90vh;background:var(--paper);color:var(--ink)}
+  dialog::backdrop{background:rgba(20,14,10,.5)}
+  .dlg{padding:20px}
+  .dlg h3{margin:0 0 2px;font-size:20px}
+
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;z-index:50;font-weight:500;max-width:90vw}
+
+  /* print sheet: loyalty-card size (85.6 x 54 mm), fronts page then backs page, 10 per A4 */
+  #print{display:none}
+  @media print{
+    @page{size:A4;margin:8mm}
+    body{background:#fff}
+    body > *:not(#print){display:none!important}
+    body::before{display:none}
+    #print{display:block}
+    .psheet{display:grid;grid-template-columns:repeat(2,85.6mm);grid-auto-rows:54mm;justify-content:center;align-content:start;break-after:page;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .psheet:last-child{break-after:auto}
+    .psheet + .psheet{break-before:page}
+    .pc{box-sizing:border-box;width:85.6mm;height:54mm;overflow:hidden;border:0.15mm dashed #bbb;font-family:Poppins,system-ui,sans-serif}
+    .pc.blank{border-color:transparent}
+    /* front */
+    .pf{background:#fff;color:#1d1714;display:flex;align-items:center;gap:3mm;padding:4mm 4mm 4mm 5mm;position:relative;border-left:2mm solid var(--brand)}
+    .pf .l{flex:1;min-width:0;display:flex;flex-direction:column;height:100%}
+    .pf img{width:15mm;height:15mm;display:block}
+    .pf .t{font-size:10pt;font-weight:800;line-height:1.08;margin-top:1.8mm}
+    .pf .t span{color:var(--brand)}
+    .pf .k{font-size:5.4pt;color:#5c524c;margin-top:.8mm;line-height:1.3}
+    .pf code{font:600 7.2pt Poppins,sans-serif;letter-spacing:.06em;margin-top:auto;color:#1d1714}
+    .pf .q{background:#fff;padding:1mm;flex:none}
+    .pf .q svg{display:block;width:32mm;height:32mm}
+    /* back */
+    .pb{background:#fff;color:#1d1714;padding:2.8mm 3.4mm 2.4mm;font-size:5.1pt;line-height:1.26;display:flex;flex-direction:column}
+    .pb .intro{font-weight:700;font-size:5.8pt;text-align:center;margin:0 0 1.3mm;color:#1d1714}
+    .pb .cols{display:grid;grid-template-columns:1fr 1fr;gap:1.6mm}
+    .pb .rw{border:0.2mm solid #ddd;border-radius:1.2mm;padding:1.1mm 1.4mm}
+    .pb h4{margin:0 0 .3mm;font-size:5.6pt;font-weight:800;color:var(--brand)}
+    .pb .rw p{margin:0 0 .4mm;color:#555}
+    .pb ul{list-style:none;margin:0;padding:0}
+    .pb .rw li{margin:.15mm 0}
+    .pb .how{margin-top:1.2mm}
+    .pb .how b{font-size:5.6pt}
+    .pb .how li{margin:.25mm 0;padding-left:1.8mm;text-indent:-1.8mm}
+    .pb .thanks{margin:auto 0 0;padding-top:.9mm;border-top:0.3mm solid var(--brand);font-weight:600;text-align:center}
+    .pb.simple{justify-content:center;text-align:center;font-size:7pt}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="v-login" hidden>
+  <div class="login">
+    <h1 id="l-brand">Loading…</h1>
+    <p class="tag" id="l-tag"></p>
+    <label for="l-pin">Staff PIN</label>
+    <input id="l-pin" class="pin" type="tel" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••">
+    <p class="err" id="l-err" role="alert"></p>
+    <button class="btn brand wide" id="l-go">Sign in</button>
+    <p style="text-align:center;margin-top:28px;font-size:15px">Customer? <a href="card.html" style="color:var(--brand);font-weight:600">Check your stamps →</a></p>
+  </div>
+</section>
+
+<!-- TOP BAR (scan + admin) -->
+<header class="top" id="topbar" hidden>
+  <div class="who"><b id="t-brand"></b><span id="t-staff"></span></div>
+  <button id="t-scan" class="on">Scan</button>
+  <button id="t-admin" hidden>Admin</button>
+  <button id="t-out">Sign out</button>
+</header>
+
+<!-- SCAN -->
+<section id="v-scan" hidden>
+  <div class="wrap">
+    <div class="reader-box">
+      <div id="reader"></div>
+      <div class="frame" id="frame" hidden></div>
+      <div class="reader-msg" id="cam-msg">
+        <p id="cam-text">Starting camera…</p>
+        <button class="btn brand" id="cam-start" hidden>Turn on camera</button>
+      </div>
+    </div>
+    <p class="hint" id="scan-hint">Point the camera at the customer’s QR. Each scan adds points automatically.</p>
+
+    <div class="section-title">QR won’t scan?</div>
+    <div class="row">
+      <input id="m-code" placeholder="Type the card code" autocapitalize="characters" autocomplete="off" aria-label="Card code">
+      <button class="btn" id="m-go">Open</button>
+    </div>
+
+    <div class="section-title">Find a customer</div>
+    <input id="f-q" placeholder="Name, mobile number or code" autocomplete="off" aria-label="Find a customer">
+    <ul class="results" id="f-res"></ul>
+  </div>
+</section>
+
+<!-- ADMIN -->
+<section id="v-admin" hidden>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" data-tab="activity" aria-selected="true">Activity</button>
+    <button role="tab" data-tab="customers">Customers</button>
+    <button role="tab" data-tab="rewards">Rewards</button>
+    <button role="tab" data-tab="staff">Staff</button>
+    <button role="tab" data-tab="cards">Print cards</button>
+    <button role="tab" data-tab="settings">Settings</button>
+  </nav>
+  <div class="admin" id="a-body"><p class="muted">Loading…</p></div>
+</section>
+
+<!-- RESULT SHEET -->
+<div class="scrim" id="sheet-scrim" hidden>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div>
+</div>
+
+<dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
+<div id="print"></div>
+
+<script>
+/* ===== CONFIG =====
+   BRAND: which brand this deployment is for ('convista' or 'cafe2').
+   You can also open index.html?brand=cafe2 to switch without editing. */
+const CONFIG = {
+  SUPABASE_URL: 'https://zmcalfrnhmhjjpjlpleh.supabase.co',
+  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptY2FsZnJuaG1oampwamxwbGVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3Mzc1NjQsImV4cCI6MjEwMzMxMzU2NH0.LqxMPTlNnwVuaO5cZ5j-bbQSJmL96Vwlsg1fUrtI7qA',
+  BRAND: 'convista'
+};
+const BRAND_ID = new URLSearchParams(location.search).get('brand') || CONFIG.BRAND;
+const SKEY = 'qrp_session_' + BRAND_ID;
+
+/* ===== helpers ===== */
+const $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function plural(n, w){ return n + ' ' + w + (Math.abs(n) === 1 ? '' : 's'); }
+function fmtCode(c){ return c ? c.slice(0,2) + ' ' + c.slice(2,6) + ' ' + c.slice(6) : ''; }
+function fmtDate(iso){ return iso ? new Date(iso).toLocaleString('en-PH', {timeZone:'Asia/Manila', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : '—'; }
+function cardUrl(code){ return new URL('card.html?c=' + encodeURIComponent(code), location.href).href; }
+function ordinal(n){ var v = n % 100; return n + (v >= 11 && v <= 13 ? 'th' : ({1:'st',2:'nd',3:'rd'}[n % 10] || 'th')); }
+function qrSvg(text){ var q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({cellSize:4, margin:0, scalable:true}); }
+
+var ERR = {
+  bad_level:'Pick Bronze, Silver or Gold.',
+  points_1_to_50:'Add between 1 and 50 points at a time.',
+  session_expired:'Your session ended. Please sign in again.',
+  master_only:'Only the master admin can do that.',
+  wrong_pin:'That PIN didn’t match. Try again.',
+  too_many_attempts:'Too many wrong PINs. Wait 5 minutes and try again.',
+  cannot_undo:'This point was already undone.',
+  undo_window_passed:'Undo is only available for 15 minutes by the staff who scanned. Ask the master admin to adjust the points.',
+  points_already_used:'Those points were already used for a reward, so the scan can’t be undone. Ask the master admin to adjust.',
+  not_enough_points:'Not enough points for this reward yet.',
+  unknown_program:'That reward card no longer exists. Refresh and pick another one.',
+  program_name_required:'Enter the card name, for example Coffee.',
+  unknown_card:'That card isn’t registered.',
+  unknown_reward:'That reward is no longer available.',
+  pin_in_use:'Another staff member already uses that PIN. Pick a different one.',
+  pin_4_to_6_digits:'PIN must be 4 to 6 digits.',
+  pin_required:'Set a PIN for the new staff member.',
+  need_one_master:'Keep at least one active master admin.',
+  staff_name_required:'Enter the staff member’s name.',
+  reward_name_required:'Enter the free reward, for example Free coffee.',
+  reward_cost_required:'Enter how many points the reward costs.',
+  would_go_negative:'Points can’t go below zero.',
+  points_required:'Enter how many points to add or remove.',
+  count_1_to_200:'Create between 1 and 200 cards at a time.',
+  network:'No internet connection. Check the Wi-Fi and try again.'
+};
+function errText(e){
+  var m = (e && e.message) || String(e);
+  for (var k in ERR) if (m.indexOf(k) !== -1) return ERR[k];
+  return 'Something went wrong (' + m + ').';
+}
+
+function rpc(fn, args){
+  return new Promise(function(resolve, reject){
+    var x = new XMLHttpRequest();
+    x.open('POST', CONFIG.SUPABASE_URL + '/rest/v1/rpc/' + fn);
+    x.setRequestHeader('apikey', CONFIG.SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + CONFIG.SUPABASE_KEY);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.onload = function(){
+      var d = null; try { d = JSON.parse(x.responseText); } catch(e){}
+      if (x.status >= 200 && x.status < 300) resolve(d);
+      else reject(new Error((d && d.message) || ('HTTP ' + x.status)));
+    };
+    x.onerror = function(){ reject(new Error('network')); };
+    x.send(JSON.stringify(args || {}));
+  });
+}
+/* authed call: kicks back to login if the session ended */
+function api(fn, args){
+  args = Object.assign({p_token: S.token}, args || {});
+  return rpc(fn, args).catch(function(e){
+    if (String(e.message).indexOf('session_expired') !== -1) { signOut(true); }
+    throw e;
+  });
+}
+
+var toastTimer;
+function toast(msg){
+  var t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.hidden = true; }, 2600);
+}
+function theme(b){
+  if (!b) return;
+  var r = document.documentElement.style;
+  if (b.color_primary) r.setProperty('--brand', b.color_primary);
+  if (b.color_ink) r.setProperty('--ink', b.color_ink);
+  if (b.color_paper) r.setProperty('--paper', b.color_paper);
+  document.querySelector('meta[name=theme-color]').content = b.color_ink || '#241A14';
+}
+
+/* ===== state ===== */
+var S = null;          // {token, staff:{name,role,branch}, brand:{...}}
+try { S = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch(e){ S = null; }
+function saveS(){ try { localStorage.setItem(SKEY, JSON.stringify(S)); } catch(e){} }
+
+function show(view){
+  ['v-login','v-scan','v-admin'].forEach(function(v){ $(v).hidden = v !== view; });
+  $('topbar').hidden = view === 'v-login';
+  $('t-scan').classList.toggle('on', view === 'v-scan');
+  $('t-admin').classList.toggle('on', view === 'v-admin');
+  if (view === 'v-scan') startCamera(); else stopCamera();
+}
+
+/* ===== login ===== */
+function renderLogin(brand){
+  theme(brand);
+  $('l-brand').textContent = brand ? brand.name : 'Points scanner';
+  $('l-tag').textContent = brand ? (brand.tagline || '') : '';
+  document.title = (brand ? brand.name + ' ' : '') + 'points scanner';
+}
+function doLogin(){
+  var pin = $('l-pin').value.trim();
+  if (!/^\d{4,6}$/.test(pin)) { $('l-err').textContent = 'Enter your 4 to 6 digit PIN.'; return; }
+  $('l-go').disabled = true; $('l-err').textContent = '';
+  rpc('qrp_login', {p_brand: BRAND_ID, p_pin: pin, p_branch: ''}).then(function(d){
+    if (!d || d.error) { $('l-err').textContent = ERR[d && d.error] || 'Sign-in failed.'; $('l-pin').select(); return; }
+    S = d; saveS();
+    $('l-pin').value = '';
+    enterApp();
+  }).catch(function(e){ $('l-err').textContent = errText(e); })
+    .then(function(){ $('l-go').disabled = false; });
+}
+$('l-go').addEventListener('click', doLogin);
+$('l-pin').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
+
+function signOut(expired){
+  if (S && S.token && !expired) rpc('qrp_logout', {p_token: S.token}).catch(function(){});
+  S = null; try { localStorage.removeItem(SKEY); } catch(e){}
+  closeSheet(); stopCamera();
+  show('v-login');
+  if (expired) $('l-err').textContent = ERR.session_expired;
+  rpc('qrp_brand', {p_brand: BRAND_ID}).then(renderLogin).catch(function(){ renderLogin(null); });
+}
+$('t-out').addEventListener('click', function(){ signOut(false); });
+
+function enterApp(){
+  theme(S.brand);
+  $('t-brand').textContent = S.brand.name;
+  $('t-staff').textContent = S.staff.role === 'master' ? 'Master admin' : 'Staff admin';
+  $('t-admin').hidden = S.staff.role !== 'master';
+  document.title = S.brand.name + ' points scanner';
+  renderProgPicker();
+  show('v-scan');
+  // refresh reward cards in case the master changed them
+  rpc('qrp_brand', {p_brand: BRAND_ID}).then(function(b){ if (b && S) { S.brand = b; saveS(); renderProgPicker(); } }).catch(function(){});
+}
+$('t-scan').addEventListener('click', function(){ show('v-scan'); });
+$('t-admin').addEventListener('click', function(){ show('v-admin'); loadAdmin(); });
+
+/* ===== camera ===== */
+var scanner = null, camOn = false, busy = false, lastText = '', lastAt = 0;
+function camMsg(text, showBtn){
+  $('cam-msg').hidden = !text; $('cam-text').textContent = text || '';
+  $('cam-start').hidden = !showBtn; $('frame').hidden = !!text;
+}
+function startCamera(){
+  if (camOn) { resumeCamera(); return; }
+  if (typeof Html5Qrcode === 'undefined') { camMsg('The scanner didn’t load. Check the internet and refresh, or type the card code below.', false); return; }
+  camMsg('Starting camera…', false);
+  try { if (!scanner) scanner = new Html5Qrcode('reader', {verbose:false}); } catch(e){ camMsg('Camera isn’t available on this device. Type the card code below.', false); return; }
+  scanner.start({facingMode:'environment'}, {fps:10, qrbox:function(w,h){ var s = Math.floor(Math.min(w,h)*0.68); return {width:s, height:s}; }},
+    onDecode, function(){}).then(function(){ camOn = true; camMsg('', false); })
+    .catch(function(e){
+      var m = String(e && (e.name || e.message || e));
+      camMsg(/NotAllowed|Permission/i.test(m) ? 'Camera access is blocked. Allow the camera for this site in your browser settings, then tap the button.' : 'The camera couldn’t start. Tap to try again, or type the card code below.', true);
+    });
+}
+function stopCamera(){
+  if (scanner && camOn) { scanner.stop().catch(function(){}); camOn = false; }
+}
+function pauseCamera(){ try { if (scanner && camOn) scanner.pause(true); } catch(e){} }
+function resumeCamera(){ try { if (scanner && camOn && scanner.getState && scanner.getState() === 3) scanner.resume(); } catch(e){} }
+$('cam-start').addEventListener('click', startCamera);
+document.addEventListener('visibilitychange', function(){
+  if (document.hidden) stopCamera();
+  else if (!$('v-scan').hidden && $('sheet-scrim').hidden) startCamera();
+});
+
+function parseCode(text){
+  text = String(text || '').trim();
+  try { var u = new URL(text); var c = u.searchParams.get('c'); if (c) return c.toUpperCase(); } catch(e){}
+  return text.replace(/\s+/g,'').toUpperCase();
+}
+function onDecode(text){
+  var now = Date.now();
+  if (busy || !$('sheet-scrim').hidden) return;
+  if (text === lastText && now - lastAt < 4000) return;
+  lastText = text; lastAt = now;
+  openCard(parseCode(text));
+}
+$('m-go').addEventListener('click', function(){
+  var c = parseCode($('m-code').value); if (!c) return;
+  openCard(c); $('m-code').value = '';
+});
+$('m-code').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('m-go').click(); });
+
+function programs(){ return (S && S.brand && S.brand.programs) || []; }
+function progById(id){ return programs().filter(function(p){ return p.id === id; })[0]; }
+function renderProgPicker(){
+  if (!S) return;
+  $('scan-hint').textContent = programs().length
+    ? 'Scan the customer’s QR to open their card, then choose what to add.'
+    : 'No reward cards are set up yet. The master admin can add them in Admin → Rewards.';
+}
+
+/* ===== scan + sheet ===== */
+var cur = null;  // {status, card, event_id, added, program_id, program_name, minutes_ago}
+var qty = {};
+function addPoints(programId){
+  if (busy || !cur || !cur.card) return;
+  var n = qty[programId] || 1, code = cur.card.code;
+  busy = true;
+  api('qrp_add_points', {p_code: code, p_program_id: programId, p_points: n}).then(function(r){
+    cur = r; qty = {};
+    if (navigator.vibrate) navigator.vibrate(60);
+    renderSheet();
+  }).catch(function(e){ alert(errText(e)); }).then(function(){ busy = false; });
+}
+function openCard(code){
+  if (!code || busy) return;
+  qty = {};
+  busy = true; pauseCamera();
+  api('qrp_card', {p_code: code}).then(function(c){
+    cur = c ? {status:'view', card:c} : {status:'unknown', code:code};
+    renderSheet();
+  }).catch(function(e){ if (S) { cur = {status:'error', message: errText(e)}; renderSheet(); } })
+    .then(function(){ busy = false; });
+}
+
+function histLabel(x){
+  var n = x.program_name || '';
+  if (x.kind === 'scan') return (n ? n + ' ' : '') + 'point';
+  if (x.kind === 'redeem') return 'Claimed ' + (x.note || n);
+  if (x.kind === 'undo') return 'Undo ' + n;
+  if (x.kind === 'adjust') return (n ? n + ' ' : '') + 'adjusted' + (x.note ? ': ' + x.note : '');
+  if (x.kind === 'register') return 'Saved details';
+  return x.kind;
+}
+function histHtml(h){
+  if (!h || !h.length) return '<p class="muted" style="font-size:14px">No activity yet.</p>';
+  return '<ul class="hist">' + h.map(function(x){
+    return '<li class="' + (x.undone ? 'undone' : '') + '"><span>' + esc(histLabel(x)) +
+      '<small>' + esc(fmtDate(x.created_at)) + [x.staff_name].filter(Boolean).map(function(v){ return ', ' + esc(v); }).join('') + '</small></span>' +
+      '<b>' + (x.points > 0 ? '+' : '') + x.points + '</b></li>';
+  }).join('') + '</ul>';
+}
+var LV_ICON = {Bronze:'🥉', Silver:'🥈', Gold:'🥇'};
+function progIcon(name){ return /tower|cocktail/i.test(name) ? '🍹' : (/coffee/i.test(name) ? '☕' : '⭐'); }
+function progTitle(name){ return progIcon(name) + ' ' + name.toUpperCase() + ' REWARDS'; }
+function ladderHtml(b){
+  var r = b.rewards || {};
+  return '<ul class="ladder">' + ['Bronze','Silver','Gold'].map(function(l){
+    return '<li class="' + (l === b.level ? 'cur' : '') + '"><span>' + LV_ICON[l] + ' <b>' + l + ':</b> ' + esc(r[l] || '') + '</span></li>';
+  }).join('') + '</ul>';
+}
+function untilText(b){
+  var n = b.cost - b.points;
+  return n + ' more ' + (n === 1 ? 'stamp' : 'stamps') + ' until ' + b.level + ': ' + b.reward_name;
+}
+function dotsHtml(b){
+  if (b.cost > 15) {
+    return '<div class="meter"><i style="width:' + Math.min(100, Math.round(b.points / b.cost * 100)) + '%"></i></div>';
+  }
+  var h = '<div class="dots" aria-hidden="true">';
+  for (var i = 0; i < b.cost; i++) h += '<i class="' + (i < b.points ? 'on' : '') + '"></i>';
+  return h + '<i class="free' + (b.points >= b.cost ? ' on' : '') + '">Free</i></div>';
+}
+function balancesHtml(c, highlight, withAdd){
+  return '<ul class="bals">' + c.balances.map(function(b){
+    var ready = b.points >= b.cost;
+    var n = qty[b.program_id] || 1, pid = esc(b.program_id);
+    return '<li class="' + (b.program_id === highlight ? 'hl' : '') + '"><div class="bal-top"><b>' + esc(progTitle(b.name)) +
+      '<span class="lvl ' + esc(b.level) + '">' + LV_ICON[b.level] + ' ' + esc(b.level) + ' card</span></b>' +
+      '<span class="cnt">' + b.points + '<small> / ' + b.cost + '</small></span></div>' +
+      '<p class="collect">Collect ' + b.cost + ' stamps from qualifying ' + esc(b.name) + ' purchases:</p>' + ladderHtml(b) + dotsHtml(b) +
+      (ready ? '<button class="btn brand wide" data-redeem="' + pid + '" data-name="' + esc(b.level + ': ' + b.reward_name) + '" data-cost="' + b.cost + '">Claim ' + LV_ICON[b.level] + ' ' + esc(b.level + ': ' + b.reward_name) + '</button>'
+             : '<small>' + esc(untilText(b)) + '</small>') +
+      (withAdd ? '<div class="addrow"><div class="step"><button type="button" data-step="' + pid + '" data-d="-1" aria-label="One less">−</button>' +
+        '<output aria-live="polite">' + n + '</output><button type="button" data-step="' + pid + '" data-d="1" aria-label="One more">+</button></div>' +
+        '<button class="btn" data-addpts="' + pid + '">Add ' + plural(n, 'stamp') + '</button></div>' : '') + '</li>';
+  }).join('') + '</ul>';
+}
+
+function renderSheet(){
+  var r = cur, c = r.card, h = '';
+  var bname = esc(S.brand.name);
+  if (r.status === 'added') {
+    h += '<div class="hero"><span class="big">+' + r.added + '</span><p id="sheet-title">' + esc(r.program_name) + ' ' + (r.added === 1 ? 'stamp' : 'stamps') + ' added</p></div>';
+  } else if (r.status === 'cooldown') {
+    h += '<div class="hero warn"><span class="big">Wait</span><p id="sheet-title">' + esc(r.program_name) + ' already scanned ' + (r.minutes_ago < 1 ? 'just now' : plural(r.minutes_ago, 'minute') + ' ago') + '</p></div>' +
+         '<p class="muted" style="margin:8px 0 0">No point was added. If this is a new ' + esc(r.program_name) + ' purchase, add it anyway.</p>';
+  } else if (r.status === 'view') {
+    h += '<h2 id="sheet-title" style="margin:0">Choose what to add</h2>';
+  } else if (r.status === 'unknown' || r.status === 'other_brand') {
+    h += '<div class="hero bad"><span class="big">Not found</span></div>' +
+         '<p id="sheet-title" style="font-weight:600">This isn’t a ' + bname + ' points card.</p>' +
+         '<p class="muted">Code read: ' + esc(r.code || '') + '. Check that it’s one of your printed cards, or try typing the code.</p>';
+  } else {
+    h += '<div class="hero bad"><span class="big">Error</span></div><p id="sheet-title">' + esc(r.message) + '</p>';
+  }
+
+  if (c) {
+    h += '<div class="cust"><div><b>' + esc(c.name || 'New customer') + '</b><small>' + esc(fmtCode(c.code)) + (c.mobile ? ', ' + esc(c.mobile) : '') + '</small></div></div>';
+    h += balancesHtml(c, r.program_id, true);
+    if (!c.registered) {
+      h += '<div class="reg"><div class="section-title">Save customer details (optional)</div>' +
+           '<label for="r-name">Name</label><input id="r-name" autocomplete="off">' +
+           '<label for="r-mob">Mobile number</label><input id="r-mob" type="tel" inputmode="tel" autocomplete="off" placeholder="09XX XXX XXXX">' +
+           '<button class="btn wide" style="margin-top:12px" id="r-save">Save details</button></div>';
+    }
+  }
+
+  h += '<div class="actions">';
+  if (r.status === 'added') h += '<button class="btn ghost" id="s-undo">Undo ' + esc(r.program_name) + ' +' + r.added + '</button>';
+  h += '<button class="btn brand" id="s-next">Done, scan next</button>';
+  h += '</div>';
+  if (c && r.status === 'view') h += '<div class="section-title">History</div>' + histHtml(c.history);
+
+  $('sheet').innerHTML = h;
+  $('sheet-scrim').hidden = false;
+  var nextBtn = $('s-next'); if (nextBtn) nextBtn.focus({preventScroll:true});
+}
+
+function closeSheet(){
+  $('sheet-scrim').hidden = true; cur = null; lastText = '';
+  if (!$('v-scan').hidden) resumeCamera();
+}
+
+$('sheet').addEventListener('click', function(e){
+  var t = e.target.closest('button'); if (!t) return;
+  if (t.id === 's-next') return closeSheet();
+  if (t.dataset.step) {
+    var k = t.dataset.step; qty[k] = Math.max(1, Math.min(50, (qty[k] || 1) + (+t.dataset.d)));
+    return renderSheet();
+  }
+  if (t.dataset.addpts) return addPoints(t.dataset.addpts);
+  if (t.id === 's-undo') {
+    if (!confirm('Remove the ' + plural(cur.added, cur.program_name + ' stamp') + ' just added?')) return;
+    t.disabled = true;
+    return api('qrp_undo', {p_event_id: cur.event_id}).then(function(card){
+      cur = {status:'view', card:card}; renderSheet(); toast('Scan undone');
+    }).catch(function(err){ t.disabled = false; alert(errText(err)); });
+  }
+  if (t.id === 'r-save') {
+    var name = $('r-name').value.trim(), mob = $('r-mob').value.trim();
+    if (!name && !mob) { $('r-name').focus(); return; }
+    t.disabled = true;
+    return api('qrp_register', {p_code: cur.card.code, p_name: name, p_mobile: mob}).then(function(card){
+      cur.card = card; renderSheet(); toast('Customer saved');
+    }).catch(function(err){ t.disabled = false; alert(errText(err)); });
+  }
+  if (t.dataset.redeem) {
+    if (!confirm('Give ' + t.dataset.name + '? This uses ' + plural(+t.dataset.cost, 'stamp') + ' and moves the customer up a level.')) return;
+    t.disabled = true;
+    return api('qrp_redeem', {p_code: cur.card.code, p_program_id: t.dataset.redeem}).then(function(card){
+      cur = {status:'view', card:card}; renderSheet(); toast('Claimed ' + t.dataset.name);
+    }).catch(function(err){ t.disabled = false; alert(errText(err)); });
+  }
+});
+function closeSheetSilently(){ $('sheet-scrim').hidden = true; }
+$('sheet-scrim').addEventListener('click', function(e){ if (e.target === this) closeSheet(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('sheet-scrim').hidden) closeSheet(); });
+
+/* ===== find customer ===== */
+var findTimer;
+$('f-q').addEventListener('input', function(){
+  clearTimeout(findTimer);
+  var q = this.value.trim();
+  if (q.length < 2) { $('f-res').innerHTML = ''; return; }
+  findTimer = setTimeout(function(){
+    api('qrp_find', {p_q: q}).then(function(list){
+      $('f-res').innerHTML = list.length ? list.map(function(c){
+        return '<li><button data-code="' + esc(c.code) + '"><span>' + esc(c.name || 'No name yet') +
+          '<small>' + esc(fmtCode(c.code)) + (c.mobile ? ', ' + esc(c.mobile) : '') + '</small></span><small style="text-align:right">' + esc(c.summary) + '</small></button></li>';
+      }).join('') : '<li class="muted" style="padding:10px 2px;font-size:14px">No customer matches “' + esc(q) + '”.</li>';
+    }).catch(function(){});
+  }, 300);
+});
+$('f-res').addEventListener('click', function(e){ var b = e.target.closest('button[data-code]'); if (b) openCard(b.dataset.code); });
+
+/* ===== admin ===== */
+var A = null, tab = 'activity', custQ = '';
+function loadAdmin(){
+  $('a-body').innerHTML = '<p class="muted">Loading…</p>';
+  return api('qrp_admin').then(function(d){ A = d; S.brand = d.brand; saveS(); theme(d.brand); renderProgPicker(); renderAdmin(); })
+    .catch(function(e){ if (S) $('a-body').innerHTML = '<p class="err">' + esc(errText(e)) + '</p>'; });
+}
+$('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-tab]'); if (!b) return;
+  tab = b.dataset.tab;
+  [].forEach.call(this.children, function(x){ x.setAttribute('aria-selected', x === b); });
+  renderAdmin();
+});
+function save(kind, data, okMsg){
+  return api('qrp_admin_save', {p_kind: kind, p_data: data}).then(function(d){
+    A = d; S.brand = d.brand; saveS(); theme(d.brand); renderProgPicker(); renderAdmin(); if (okMsg) toast(okMsg); return d;
+  }).catch(function(e){ alert(errText(e)); throw e; });
+}
+
+function renderAdmin(){
+  if (!A) return;
+  var f = {activity:aActivity, customers:aCustomers, rewards:aRewards, staff:aStaff, cards:aCards, settings:aSettings}[tab];
+  $('a-body').innerHTML = f();
+  if (tab === 'customers') { var i = $('c-q'); if (i) { i.value = custQ; } }
+}
+
+function aActivity(){
+  var s = A.stats, ev = A.events;
+  return '<div class="stats">' +
+      '<div class="stat"><b>' + s.scans_today + '</b><span>Scans today</span></div>' +
+      '<div class="stat"><b>' + s.scans_7d + '</b><span>Scans, last 7 days</span></div>' +
+      '<div class="stat"><b>' + s.redeems_7d + '</b><span>Rewards claimed, 7 days</span></div>' +
+      '<div class="stat"><b>' + s.active_cards + '<small style="font-size:15px;font-weight:500"> / ' + s.cards + '</small></b><span>Cards in use / printed</span></div>' +
+    '</div>' +
+    (A.program_stats.length ? '<div class="stats">' + A.program_stats.map(function(p){
+      return '<div class="stat"><b>' + p.ready_now + '</b><span>' + esc(p.name) + ': ready to claim now</span></div>' +
+             '<div class="stat"><b>' + p.silver + ' / ' + p.gold + '</b><span>' + esc(p.name) + ' customers on 🥈 Silver / 🥇 Gold</span></div>' +
+             '<div class="stat"><b>' + p.claims_total + '</b><span>' + esc(p.name) + ' rewards given, all time</span></div>';
+    }).join('') + '</div>' : '') +
+    '<div class="toolbar"><button class="btn small ghost" id="a-refresh">Refresh</button></div>' +
+    (ev.length ? '<div class="tbl-wrap"><table><thead><tr><th>When</th><th>Customer</th><th>Card</th><th>Action</th><th class="num">Points</th><th class="num">Balance</th><th>Staff</th></tr></thead><tbody>' +
+      ev.map(function(e){
+        var L = {scan:'Scan', redeem:'Claimed ' + e.note, adjust:'Adjusted' + (e.note ? ': ' + e.note : ''), undo:'Undo', register:'Saved details'};
+        return '<tr class="click' + (e.undone ? ' muted' : '') + '" data-code="' + esc(e.code) + '"><td>' + esc(fmtDate(e.created_at)) + '</td><td>' + esc(e.customer || fmtCode(e.code)) + '</td><td>' + esc(e.program_name) + '</td><td>' + esc(L[e.kind] || e.kind) + (e.undone ? ' (undone)' : '') +
+          '</td><td class="num">' + (e.kind === 'register' ? '' : (e.points > 0 ? '+' : '') + e.points) + '</td><td class="num">' + (e.balance_after == null ? '' : e.balance_after) + '</td><td>' + esc(e.staff_name) + '</td></tr>';
+      }).join('') + '</tbody></table></div>'
+      : '<p class="muted">No activity yet. Scans show up here with the card, staff member and time.</p>');
+}
+
+function aCustomers(){
+  var q = custQ.toLowerCase(), ps = programs();
+  var list = A.cards.filter(function(c){
+    return !q || c.code.toLowerCase().indexOf(q.replace(/\s/g,'')) !== -1 || (c.name || '').toLowerCase().indexOf(q) !== -1 || (c.mobile || '').indexOf(q.replace(/\D/g,'') || '~') !== -1;
+  });
+  return '<div class="toolbar"><input id="c-q" placeholder="Search name, mobile or code" aria-label="Search customers"></div>' +
+    (A.cards.length ? '<div class="tbl-wrap"><table><thead><tr><th>Customer</th><th>Code</th><th>Mobile</th>' +
+      ps.map(function(p){ return '<th class="num">' + esc(p.name) + '</th>'; }).join('') + '<th>Last visit</th></tr></thead><tbody>' +
+      list.map(function(c){
+        return '<tr class="click" data-code="' + esc(c.code) + '"><td>' + esc(c.name || (c.last_scan_at ? 'No name yet' : 'Not used yet')) + '</td><td>' + esc(fmtCode(c.code)) + '</td><td>' + esc(c.mobile) + '</td>' +
+          ps.map(function(p){ var done = (c.completed || {})[p.id] || 0, lv = done <= 0 ? 'Bronze' : done === 1 ? 'Silver' : 'Gold';
+            return '<td class="num">' + ((c.points || {})[p.id] || 0) + ' / ' + p.cost + ' ' + LV_ICON[lv] + '</td>'; }).join('') +
+          '<td>' + esc(c.last_scan_at ? fmtDate(c.last_scan_at) : '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>' + (list.length ? '' : '<p class="muted">No customer matches that search.</p>')
+      : '<p class="muted">No cards yet. Go to Print cards to create your first batch.</p>');
+}
+
+function aRewards(){
+  var ps = programs();
+  return (ps.length ? ps.map(function(p){
+      var r = p.rewards || {};
+      return '<div class="panel" style="max-width:640px"><div class="bal-top" style="margin-top:12px"><b style="font-size:17px">' + esc(progTitle(p.name)) + '</b>' +
+        '<span style="white-space:nowrap"><button class="btn small ghost" data-edit-prog="' + esc(p.id) + '">Edit</button> <button class="btn small danger" data-delete-prog="' + esc(p.id) + '">Delete</button></span></div>' +
+        '<p class="collect">Collect ' + p.cost + ' stamps from qualifying ' + esc(p.name) + ' purchases:</p>' +
+        '<ul class="ladder" style="font-size:15px">' + ['Bronze','Silver','Gold'].map(function(l){
+          return '<li style="color:var(--ink)">' + LV_ICON[l] + ' <b>' + l + ':</b> ' + esc(r[l] || '') + '</li>'; }).join('') + '</ul></div>';
+    }).join('') : '<p class="muted">No reward cards yet. Add one so staff can start adding stamps.</p>') +
+    '<p class="note" style="max-width:640px;margin-bottom:18px">A customer’s 1st completed card earns Bronze, the 2nd earns Silver, and the 3rd and every card after earns Gold. Staff see the right reward on the Claim button automatically.</p>' +
+    '<div class="panel"><h3 style="margin:14px 0 0">Add a reward card</h3>' +
+      '<div class="grid2"><div><label for="nr-name">Card name</label><input id="nr-name" placeholder="e.g. Coffee"></div>' +
+      '<div><label for="nr-cost">Stamps to complete</label><input id="nr-cost" type="number" min="1" inputmode="numeric" placeholder="9"></div></div>' +
+      '<label for="nr-b">🥉 Bronze reward</label><input id="nr-b" placeholder="e.g. FREE Coffee">' +
+      '<label for="nr-s">🥈 Silver reward</label><input id="nr-s" placeholder="e.g. FREE Coffee + Snack">' +
+      '<label for="nr-g">🥇 Gold reward</label><input id="nr-g" placeholder="e.g. FREE Coffee + Con Vista Merch">' +
+      '<button class="btn brand" style="margin-top:14px" id="nr-add">Add reward card</button></div>';
+}
+
+function aStaff(){
+  return '<div class="panel"><h3 style="margin:14px 0 0">Add staff</h3>' +
+      '<div class="grid2"><div><label for="ns-name">Name</label><input id="ns-name"></div>' +
+      '<div><label for="ns-pin">PIN (4–6 digits)</label><input id="ns-pin" type="tel" inputmode="numeric" maxlength="6" autocomplete="off"></div>' +
+      '<div><label for="ns-role">Access</label><select id="ns-role"><option value="staff">Staff admin: scan, add points, claim rewards</option><option value="master">Master admin: everything</option></select></div>' +
+      '</div>' +
+      '<button class="btn brand" style="margin-top:14px" id="ns-add">Add staff</button></div>' +
+    '<div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Access</th><th>Status</th><th></th></tr></thead><tbody>' +
+      A.staff.map(function(s){
+        return '<tr><td>' + esc(s.name) + '</td><td><span class="pill' + (s.role === 'master' ? ' m' : '') + '">' + (s.role === 'master' ? 'Master admin' : 'Staff admin') + '</span>' +
+          '</td><td>' + (s.active ? 'Active' : '<span class="muted">Disabled</span>') + '</td><td style="text-align:right"><button class="btn small ghost" data-edit-staff="' + esc(s.id) + '">Edit</button></td></tr>';
+      }).join('') + '</tbody></table></div>' +
+    '<p class="note">Each person signs in with their own PIN, so every scan in Activity shows who did it.</p>';
+}
+
+function aCards(){
+  return '<div class="panel"><h3 style="margin:14px 0 0">Create new cards</h3>' +
+    '<p class="note">Each card gets its own QR code. Cards start with 0 points and become active the first time staff scan them. Loyalty-card size, 10 per A4. Page 1 is the fronts (logo and QR), page 2 the backs (instructions). Print double-sided, flip on long edge, then cut along the dashed lines.</p>' +
+    '<label for="pc-n">How many cards</label><input id="pc-n" type="number" min="1" max="200" value="10" inputmode="numeric">' +
+    '<button class="btn brand" style="margin-top:14px" id="pc-go">Create and print</button></div>' +
+    '<p class="note">To reprint a lost card, open the customer in Customers and tap Print this card.</p>';
+}
+
+function aSettings(){
+  var b = A.brand;
+  return '<div class="panel">' +
+    '<label for="st-name">Brand name</label><input id="st-name" value="' + esc(b.name) + '">' +
+    '<label for="st-tag">Tagline</label><input id="st-tag" value="' + esc(b.tagline) + '">' +
+    '<label for="st-col">Main colour</label><input id="st-col" type="color" value="' + esc(b.color_primary) + '" style="height:50px;padding:4px;max-width:160px">' +
+    '<button class="btn brand" style="margin-top:16px" id="st-save">Save settings</button></div>';
+}
+
+/* admin events */
+$('a-body').addEventListener('input', function(e){
+  if (e.target.id === 'c-q') {
+    custQ = e.target.value; var pos = e.target.selectionStart;
+    renderAdmin(); var i = $('c-q'); i.focus(); try { i.setSelectionRange(pos, pos); } catch(_){}
+  }
+});
+$('a-body').addEventListener('change', function(e){
+});
+$('a-body').addEventListener('click', function(e){
+  var t = e.target.closest('button, tr.click'); if (!t) return;
+  if (t.id === 'a-refresh') return loadAdmin();
+  if (t.matches('tr.click')) return customerDialog(t.dataset.code);
+  if (t.id === 'nr-add') {
+    var name = $('nr-name').value.trim(), cost = parseInt($('nr-cost').value, 10);
+    var rb = $('nr-b').value.trim(), rs = $('nr-s').value.trim(), rg = $('nr-g').value.trim();
+    if (!name) return $('nr-name').focus(); if (!(cost > 0)) return $('nr-cost').focus(); if (!rb) return $('nr-b').focus();
+    return save('program', {name:name, cost:cost, reward_bronze:rb, reward_silver:rs, reward_gold:rg}, 'Reward card added');
+  }
+  if (t.dataset.deleteProg) return deleteProgram(progById(t.dataset.deleteProg));
+  if (t.dataset.editProg) return programDialog(progById(t.dataset.editProg));
+  if (t.id === 'ns-add') {
+    var n = $('ns-name').value.trim(), p = $('ns-pin').value.trim();
+    if (!n) return $('ns-name').focus();
+    if (!/^\d{4,6}$/.test(p)) { alert(ERR.pin_4_to_6_digits); return $('ns-pin').focus(); }
+    return save('staff', {name:n, pin:p, role:$('ns-role').value, active:true}, 'Staff added');
+  }
+  if (t.dataset.editStaff) return staffDialog(A.staff.find(function(x){ return x.id === t.dataset.editStaff; }));
+  if (t.id === 'pc-go') {
+    var k = parseInt($('pc-n').value, 10);
+    if (!(k >= 1 && k <= 200)) return alert(ERR.count_1_to_200);
+    t.disabled = true;
+    return api('qrp_create_cards', {p_count: k}).then(function(codes){
+      printCards(codes); toast(plural(codes.length, 'card') + ' created'); loadAdmin();
+    }).catch(function(err){ alert(errText(err)); }).then(function(){ t.disabled = false; });
+  }
+  if (t.id === 'st-save') {
+    return save('settings', {
+      name:$('st-name').value.trim(), tagline:$('st-tag').value.trim(),
+      color_primary:$('st-col').value
+    }, 'Settings saved').then(function(){ enterAppLabels(); });
+  }
+});
+function enterAppLabels(){
+  $('t-brand').textContent = S.brand.name;
+  renderProgPicker();
+}
+
+/* dialogs */
+function openDlg(html){ $('dlg-body').innerHTML = html; if (!$('dlg').open) $('dlg').showModal(); }
+function closeDlg(){ $('dlg').close(); }
+$('dlg').addEventListener('click', function(e){ if (e.target === this) closeDlg(); });
+
+function programDialog(p){
+  if (!p) return;
+  var r = p.rewards || {};
+  openDlg('<h3>Edit ' + esc(p.name) + ' card</h3>' +
+    '<div class="grid2"><div><label for="ep-name">Card name</label><input id="ep-name" value="' + esc(p.name) + '"></div>' +
+    '<div><label for="ep-cost">Stamps to complete</label><input id="ep-cost" type="number" min="1" value="' + p.cost + '"></div></div>' +
+    '<label for="ep-b">🥉 Bronze reward</label><input id="ep-b" value="' + esc(r.Bronze || '') + '">' +
+    '<label for="ep-s">🥈 Silver reward</label><input id="ep-s" value="' + esc(r.Silver || '') + '">' +
+    '<label for="ep-g">🥇 Gold reward</label><input id="ep-g" value="' + esc(r.Gold || '') + '">' +
+    '<div class="actions"><button class="btn brand" id="ep-save">Save</button><button class="btn danger" id="ep-del">Delete this card</button><button class="btn ghost" data-close>Cancel</button></div>');
+  $('ep-del').onclick = function(){ deleteProgram(p, true); };
+  $('ep-save').onclick = function(){
+    var n = $('ep-name').value.trim(), c = parseInt($('ep-cost').value, 10), rb = $('ep-b').value.trim();
+    if (!n) return $('ep-name').focus(); if (!(c > 0)) return $('ep-cost').focus(); if (!rb) return $('ep-b').focus();
+    save('program', {id:p.id, name:n, cost:c, reward_bronze:rb, reward_silver:$('ep-s').value.trim(), reward_gold:$('ep-g').value.trim()}, 'Reward card saved').then(closeDlg);
+  };
+}
+function deleteProgram(p, fromDialog){
+  if (!p) return;
+  var st = (A.program_stats || []).filter(function(x){ return x.program_id === p.id; })[0];
+  var held = st ? st.points_outstanding : 0;
+  if (!confirm('Delete the ' + p.name + ' card?' + (held ? ' Customers will lose their ' + p.name + ' points (' + plural(held, 'point') + ' in total).' : '') + ' Past activity stays in the history. This can’t be undone.')) return;
+  api('qrp_delete_program', {p_program_id: p.id}).then(function(d){
+    A = d; S.brand = d.brand; saveS(); renderProgPicker(); renderAdmin(); if (fromDialog) closeDlg(); toast(p.name + ' card deleted');
+  }).catch(function(e){ alert(errText(e)); });
+}
+function staffDialog(s){
+  openDlg('<h3>Edit ' + esc(s.name) + '</h3>' +
+    '<label for="es-name">Name</label><input id="es-name" value="' + esc(s.name) + '">' +
+    '<label for="es-pin">New PIN (leave blank to keep)</label><input id="es-pin" type="tel" inputmode="numeric" maxlength="6" autocomplete="off">' +
+    '<label for="es-role">Access</label><select id="es-role"><option value="staff"' + (s.role === 'staff' ? ' selected' : '') + '>Staff admin: scan, add points, claim rewards</option><option value="master"' + (s.role === 'master' ? ' selected' : '') + '>Master admin: everything</option></select>' +
+    '<label><input type="checkbox" id="es-act" style="width:auto;margin-right:8px"' + (s.active ? ' checked' : '') + '>Can sign in</label>' +
+    '<div class="actions"><button class="btn brand" id="es-save">Save staff</button><button class="btn ghost" data-close>Cancel</button></div>');
+  $('es-save').onclick = function(){
+    var p = $('es-pin').value.trim();
+    if (p && !/^\d{4,6}$/.test(p)) return alert(ERR.pin_4_to_6_digits);
+    save('staff', {id:s.id, name:$('es-name').value.trim(), pin:p, role:$('es-role').value, branch:s.branch, active:$('es-act').checked}, 'Staff saved').then(closeDlg);
+  };
+}
+function customerDialog(code){
+  openDlg('<p class="muted">Loading…</p>');
+  api('qrp_card', {p_code: code}).then(function(c){
+    if (!c) { openDlg('<p>Card not found.</p><button class="btn ghost" data-close>Close</button>'); return; }
+    openDlg('<h3>' + esc(c.name || 'No name yet') + '</h3><p class="muted" style="margin:0 0 12px">' + esc(fmtCode(c.code)) + '</p>' + balancesHtml(c, null).replace(/<button[^>]*data-redeem[^>]*>[^<]*<\/button>/g, '<small>Ready to claim at the counter</small>') +
+      '<div class="grid2"><div><label for="cd-name">Name</label><input id="cd-name" value="' + esc(c.name) + '"></div>' +
+      '<div><label for="cd-mob">Mobile</label><input id="cd-mob" type="tel" value="' + esc(c.mobile) + '"></div></div>' +
+      '<button class="btn small" style="margin-top:10px" id="cd-save">Save details</button>' +
+      '<div class="section-title">Adjust points</div>' +
+      '<label for="cd-prog">Card</label><select id="cd-prog">' + c.balances.map(function(b){ return '<option value="' + esc(b.program_id) + '">' + esc(b.name) + '</option>'; }).join('') + '</select>' +
+      '<div class="grid2"><div><label for="cd-adj">Points (use minus to remove)</label><input id="cd-adj" type="number" placeholder="e.g. 3 or -2"></div>' +
+      '<div><label for="cd-note">Reason</label><input id="cd-note" placeholder="e.g. Missed scan on 12 Oct"></div></div>' +
+      '<button class="btn small" style="margin-top:10px" id="cd-adj-go">Apply adjustment</button>' +
+      '<div class="section-title">Correct a level</div>' +
+      '<div class="grid2"><div><label for="cd-lp">Card</label><select id="cd-lp">' + c.balances.map(function(b){ return '<option value="' + esc(b.program_id) + '">' + esc(b.name) + ' (now ' + b.level + ')</option>'; }).join('') + '</select></div>' +
+      '<div><label for="cd-lv">Level</label><select id="cd-lv"><option value="0">🥉 Bronze</option><option value="1">🥈 Silver</option><option value="2">🥇 Gold</option></select></div></div>' +
+      '<button class="btn small" style="margin-top:10px" id="cd-lv-go">Set level</button>' +
+      '<div class="section-title">History</div>' + histHtml(c.history) +
+      '<div class="section-title" style="color:var(--bad)">Reset this card</div>' +
+      '<p class="note" style="margin-top:2px">Deletes this card’s name, mobile, all stamps, levels and history, and sets both cards back to 0 (Bronze). The QR code itself keeps working, so the card can be given to a new customer. This can’t be undone.</p>' +
+      '<button class="btn small danger" style="margin-top:10px" id="cd-reset">Reset card ' + esc(fmtCode(c.code)) + '</button>' +
+      '<div class="actions"><button class="btn ghost" id="cd-print">Print this card</button><a class="btn ghost" target="_blank" rel="noopener" href="' + esc(cardUrl(c.code)) + '">Open customer view</a><button class="btn" data-close>Close</button></div>');
+    $('cd-save').onclick = function(){
+      api('qrp_register', {p_code:c.code, p_name:$('cd-name').value.trim(), p_mobile:$('cd-mob').value.trim()})
+        .then(function(){ toast('Customer saved'); loadAdmin(); customerDialog(c.code); }).catch(function(e){ alert(errText(e)); });
+    };
+    $('cd-adj-go').onclick = function(){
+      var n = parseInt($('cd-adj').value, 10); if (!n) return $('cd-adj').focus();
+      var note = $('cd-note').value.trim(); if (!note) return $('cd-note').focus();
+      save('adjust', {code:c.code, program_id:$('cd-prog').value, points:n, note:note}, 'Points adjusted').then(function(){ customerDialog(c.code); });
+    };
+    $('cd-lv-go').onclick = function(){
+      save('level', {code:c.code, program_id:$('cd-lp').value, completed:+$('cd-lv').value}, 'Level updated').then(function(){ customerDialog(c.code); });
+    };
+    $('cd-reset').onclick = function(){
+      var typed = prompt('This permanently deletes everything on card ' + fmtCode(c.code) + (c.name ? ' (' + c.name + ')' : '') +
+        ': name, mobile, all stamps, levels and history.\n\nType RESET to confirm.');
+      if (typed === null) return;
+      if (typed.trim().toUpperCase() !== 'RESET') { alert('Not reset. You need to type RESET to confirm.'); return; }
+      api('qrp_reset_card', {p_code: c.code}).then(function(d){
+        A = d; renderAdmin(); toast('Card ' + fmtCode(c.code) + ' reset to 0'); customerDialog(c.code);
+      }).catch(function(e){ alert(errText(e)); });
+    };
+    $('cd-print').onclick = function(){ printCards([c.code]); };
+  }).catch(function(e){ openDlg('<p class="err">' + esc(errText(e)) + '</p><button class="btn ghost" data-close>Close</button>'); });
+}
+$('dlg').addEventListener('click', function(e){ if (e.target.closest('[data-close]')) closeDlg(); });
+
+/* print */
+var LOGO = 'data:image/webp;base64,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';
+var LOGO_FOR = {convista: true};
+var CARD_TITLE = {convista: 'Con Vista <span>Duo Rewards Card</span>'};
+var CARD_SUBTITLE = {convista: 'Please present your Rewards Card QR code every time you order coffee or a 3L Cocktail Tower at any Con Vista branch to earn your stamps! 🧡'};   // brands whose printed cards use this logo
+/* Back-of-card instructions, per brand */
+var CARD_BACK = {
+  convista:
+    '<p class="intro">Enjoy our 2 Rewards Cards and collect stamps to unlock exclusive rewards!</p>' +
+    '<div class="cols">' +
+      '<div class="rw"><h4>☕ COFFEE REWARDS</h4><p>Collect 9 stamps from qualifying coffee purchases:</p><ul>' +
+        '<li>🥉 <b>Bronze:</b> FREE Coffee</li><li>🥈 <b>Silver:</b> FREE Coffee + Snack</li><li>🥇 <b>Gold:</b> FREE Coffee + Con Vista Merch</li></ul></div>' +
+      '<div class="rw"><h4>🍹 COCKTAIL TOWER REWARDS</h4><p>Collect 9 stamps from qualifying 3L Tower purchases:</p><ul>' +
+        '<li>🥉 <b>Bronze:</b> FREE 1.5L Tower</li><li>🥈 <b>Silver:</b> FREE 2L Tower</li><li>🥇 <b>Gold:</b> FREE 3L Tower</li></ul></div>' +
+    '</div>' +
+    '<div class="how"><b>How It Works:</b><ul>' +
+      '<li>• Complete a card, claim your reward, and start a new card to level up.</li>' +
+      '<li>• 🏆 Reached Gold? Every succeeding completed card earns you the Gold Reward again!</li>' +
+      '<li>• 📲 Want to check your points? Simply ask any staff member at any Con Vista branch to check your rewards progress.</li>' +
+    '</ul></div>' +
+    '<p class="thanks">🧡 The more you collect, the bigger your rewards. Thank you for being a valued Con Vista customer!</p>'
+};
+function cardFront(code){
+  var b = S.brand;
+  return '<div class="pc pf"><div class="l">' +
+      (LOGO_FOR[BRAND_ID] ? '<img src="' + LOGO + '" alt="">' : '') +
+      '<div class="t">' + (CARD_TITLE[BRAND_ID] || esc(b.name) + ' <span>Rewards Card</span>') + '</div>' +
+      '<div class="k">' + (CARD_SUBTITLE[BRAND_ID] || 'Show this QR every time you order.') + '</div>' +
+      '<code>' + esc(fmtCode(code)) + '</code></div>' +
+    '<div class="q">' + qrSvg(cardUrl(code)) + '</div></div>';
+}
+function cardBack(){
+  var back = CARD_BACK[BRAND_ID];
+  return back ? '<div class="pc pb">' + back + '</div>'
+              : '<div class="pc pb simple"><p>Collect stamps every time you order and unlock free rewards. Show the QR on the other side to our staff.</p></div>';
+}
+/* Pages alternate: fronts, then backs mirrored left-to-right so they line up
+   when printed double-sided (flip on long edge). */
+function printCards(codes){
+  var html = '';
+  for (var i = 0; i < codes.length; i += 10) {
+    var chunk = codes.slice(i, i + 10);
+    html += '<div class="psheet">' + chunk.map(cardFront).join('') + '</div>';
+    var backs = '';
+    for (var r = 0; r < chunk.length; r += 2) {
+      var left = chunk[r], right = chunk[r + 1];
+      backs += (right ? cardBack() : '<div class="pc blank"></div>') + cardBack();
+    }
+    html += '<div class="psheet">' + backs + '</div>';
+  }
+  $('print').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 300);
+}
+
+/* ===== boot ===== */
+(function boot(){
+  if (S && S.token && S.brand && S.brand.id === BRAND_ID) { enterApp(); }
+  else { S = null; show('v-login'); rpc('qrp_brand', {p_brand: BRAND_ID}).then(renderLogin).catch(function(){ renderLogin(null); $('l-err').textContent = ERR.network; }); }
+})();
+</script>
+</body>
+</html>
