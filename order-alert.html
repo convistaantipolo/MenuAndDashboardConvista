@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Con Vista – New Order Alert</title>
+<style>
+  :root{ --bg:#faf6f1; --card:#fff; --ink:#2a1d14; --mut:#7a6a5d; --brand:#8b3a1e; --ok:#1f7a43; --line:#eadfd3; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header{ background:var(--brand); color:#fff; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  header h1{ margin:0; font-size:18px; }
+  .st{ font-size:13px; opacity:.9; }
+  main{ max-width:720px; margin:0 auto; padding:16px; }
+  .start{ text-align:center; padding:40px 16px; }
+  .start p{ color:var(--mut); }
+  button{ font:inherit; border:0; border-radius:12px; padding:14px 22px; font-weight:700; cursor:pointer; }
+  .big{ background:var(--brand); color:#fff; font-size:20px; padding:18px 30px; }
+  .alert{ background:#fff3cd; border:3px solid #e0a800; border-radius:16px; padding:16px; margin-bottom:16px; animation:pulse 1s infinite; }
+  .alert h2{ margin:0 0 6px; font-size:22px; }
+  .alert .ack{ background:var(--ok); color:#fff; width:100%; margin-top:12px; font-size:18px; }
+  @keyframes pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(224,168,0,.6);} 50%{ box-shadow:0 0 0 12px rgba(224,168,0,0);} }
+  .ord{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .ord .top{ display:flex; justify-content:space-between; gap:8px; font-weight:700; }
+  .ord ul{ margin:6px 0 0; padding-left:18px; color:var(--mut); font-size:14px; }
+  .tag{ display:inline-block; font-size:12px; border-radius:999px; padding:2px 8px; background:#eee; margin-right:4px; font-weight:600; }
+  .tag.paid{ background:#d8f0e0; color:var(--ok); }
+  .hint{ color:var(--mut); font-size:13px; text-align:center; margin-top:14px; }
+  .hidden{ display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔔 New Order Alert</h1>
+  <div class="st" id="status">Not started</div>
+</header>
+<main>
+  <div class="start" id="startBox">
+    <p>Open this page on the cashier's tablet or phone and keep it open.<br>It rings every time a customer places an order from the online menu.</p>
+    <button class="big" id="startBtn">Start listening</button>
+    <p style="font-size:13px">Tap Start once (the phone needs a tap before it is allowed to play sound). Turn the volume up.</p>
+  </div>
+  <div id="live" class="hidden">
+    <div id="alerts"></div>
+    <h3 style="margin:8px 0">Recent online orders</h3>
+    <div id="recent"></div>
+    <div class="hint">Online orders also appear in the POS under <b>Open tickets</b>. Keep this screen on; it checks for new orders every 4 seconds.</div>
+    <div style="text-align:center;margin-top:12px"><button id="testBtn" style="background:#eee">Test sound</button></div>
+  </div>
+</main>
+<script>
+(function(){
+  var SUPABASE_URL = 'https://zmcalfrnhmhjjpjlpleh.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptY2FsZnJuaG1oampwamxwbGVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3Mzc1NjQsImV4cCI6MjEwMzMxMzU2NH0.LqxMPTlNnwVuaO5cZ5j-bbQSJmL96Vwlsg1fUrtI7qA';
+  var POLL_MS = 4000, RING_EVERY_MS = 3000;
+  var ctx = null, lastSeen = 0, pending = [], ringTimer = null, titleTimer = null, started = false, wakeLock = null;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function peso(n){ return '₱' + Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2}); }
+  function store(k, v){ try{ if(v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); }catch(e){} return null; }
+
+  function ring(){
+    try{
+      if(!ctx) return;
+      if(ctx.state === 'suspended') ctx.resume();
+      var seq = [[988,0],[1319,0.22],[988,0.55],[1319,0.77]];
+      seq.forEach(function(n){
+        var o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + n[1];
+        o.type = 'square'; o.frequency.value = n[0];
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.35, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+        o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.22);
+      });
+      if(navigator.vibrate) navigator.vibrate([300,100,300]);
+    }catch(e){}
+  }
+
+  function renderAlerts(){
+    var box = $('alerts');
+    box.innerHTML = pending.map(function(o, i){
+      return '<div class="alert"><h2>New order #' + esc(o.order_number) + '</h2>' + summary(o) +
+        '<button class="ack" data-i="' + i + '">Got it</button></div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.ack'), function(b){
+      b.onclick = function(){ pending.splice(+b.getAttribute('data-i'), 1); update(); };
+    });
+  }
+
+  function typeLabel(t){ return t === 'dine-in' ? 'Dine-In' : t === 'takeout' ? 'Take-Out' : t === 'pickup' ? 'Pick-Up' : (t || ''); }
+  function summary(o){
+    var items = Array.isArray(o.items) ? o.items : [];
+    return '<div><span class="tag">' + esc(typeLabel(o.order_type)) + '</span><span class="tag ' + (o.paid ? 'paid' : '') + '">' +
+      esc(o.payment_method || '') + (o.paid ? ' ✓ paid' : ' – pay at counter') + '</span><b>' + peso(o.total) + '</b></div><ul>' +
+      items.map(function(i){ return '<li>' + esc(i.qty) + ' × ' + esc(i.name) + '</li>'; }).join('') + '</ul>';
+  }
+
+  function update(){
+    renderAlerts();
+    if(pending.length){
+      if(!ringTimer){ ring(); ringTimer = setInterval(ring, RING_EVERY_MS); }
+      if(!titleTimer){
+        var on = false;
+        titleTimer = setInterval(function(){ on = !on; document.title = on ? '🔔 NEW ORDER!' : 'Con Vista – New Order Alert'; }, 800);
+      }
+    }else{
+      if(ringTimer){ clearInterval(ringTimer); ringTimer = null; }
+      if(titleTimer){ clearInterval(titleTimer); titleTimer = null; document.title = 'Con Vista – New Order Alert'; }
+    }
+  }
+
+  function get(path){
+    return new Promise(function(resolve){
+      var x = new XMLHttpRequest();
+      x.open('GET', SUPABASE_URL + '/rest/v1' + path, true);
+      x.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      x.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_ANON_KEY);
+      x.timeout = 10000;
+      x.onreadystatechange = function(){
+        if(x.readyState !== 4) return;
+        if(x.status >= 200 && x.status < 300){ try{ resolve(JSON.parse(x.responseText)); }catch(e){ resolve(null); } }
+        else resolve(null);
+      };
+      x.onerror = x.ontimeout = function(){ resolve(null); };
+      x.send();
+    });
+  }
+
+  function renderRecent(rows){
+    $('recent').innerHTML = rows.length ? rows.map(function(o){
+      var t = new Date(o.created_at);
+      return '<div class="ord"><div class="top"><span>#' + esc(o.order_number) + ' · ' + esc(typeLabel(o.order_type)) +
+        '</span><span>' + peso(o.total) + '</span></div><div style="font-size:12px;color:#7a6a5d">' +
+        t.toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) + ' · ' + esc(o.payment_method || '') + (o.paid ? ' ✓' : '') +
+        '</div><ul>' + (Array.isArray(o.items) ? o.items : []).map(function(i){ return '<li>' + esc(i.qty) + ' × ' + esc(i.name) + '</li>'; }).join('') + '</ul></div>';
+    }).join('') : '<div class="hint">No online orders yet.</div>';
+  }
+
+  async function poll(first){
+    var rows = await get('/orders?select=id,order_number,order_type,items,total,payment_method,paid,created_at&order=id.desc&limit=15');
+    if(!rows){ $('status').textContent = 'Connection problem – retrying…'; return; }
+    $('status').textContent = 'Listening • ' + new Date().toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',second:'2-digit'});
+    renderRecent(rows);
+    var maxId = rows.length ? rows[0].id : 0;
+    if(first && !lastSeen) lastSeen = maxId; // first ever start: do not ring for old orders
+    var fresh = rows.filter(function(o){ return o.id > lastSeen; }).reverse();
+    if(fresh.length){
+      fresh.forEach(function(o){ pending.push(o); });
+      lastSeen = maxId;
+      store('cv_alert_last', String(lastSeen));
+      update();
+    }
+  }
+
+  async function keepAwake(){
+    try{ if(navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); }catch(e){}
+  }
+  document.addEventListener('visibilitychange', function(){ if(started && document.visibilityState === 'visible') keepAwake(); });
+
+  $('startBtn').onclick = function(){
+    try{ var AC = window.AudioContext || window.webkitAudioContext; ctx = new AC(); ctx.resume(); }catch(e){}
+    started = true;
+    lastSeen = parseInt(store('cv_alert_last') || '0', 10) || 0;
+    $('startBox').classList.add('hidden'); $('live').classList.remove('hidden');
+    ring();
+    keepAwake();
+    poll(true);
+    setInterval(function(){ poll(false); }, POLL_MS);
+  };
+  $('testBtn').onclick = function(){ ring(); };
+})();
+</script>
+</body>
+</html>

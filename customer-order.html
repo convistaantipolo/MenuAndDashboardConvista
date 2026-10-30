@@ -64,7 +64,7 @@
   .item-card.sold-out .item-price{ color:var(--brand-disabled-text); }
   .sold-out-badge{ background:#fff; color:var(--brand-disabled-text); font-size:11px; font-weight:700; border-radius:999px; padding:5px 12px; flex-shrink:0; white-space:nowrap; border:1px solid var(--brand-border); }
   .item-info{ padding-right:12px; }
-  .item-thumb{ width:56px; height:56px; border-radius:50%; object-fit:cover; flex-shrink:0; margin-right:12px; }
+  .item-thumb{ width:56px; height:56px; border-radius:50%; object-fit:cover; flex-shrink:0; margin-right:12px; background:var(--brand-border); }
   .item-name{ font-weight:600; font-size:15px; }
   .item-desc{ font-size:12px; color:var(--brand-muted); margin-top:2px; }
   .item-price{ font-weight:700; font-size:14px; color:var(--brand-primary); margin-top:4px; }
@@ -394,7 +394,7 @@
      No network call, no Supabase, needed to show the menu at all.
      To edit prices/items later: just edit this array directly.
      ====================================================================== */
-  const MENU_ITEMS = [
+  let MENU_ITEMS = [
     { id: 'ap01', category: 'Appetizers', name: 'Fries', description: 'Perfect to share.', price: 159.0 },
     { id: 'ap02', category: 'Appetizers', name: 'Chicken Fingers', description: 'Perfect to share.', price: 179.0 },
     { id: 'ap03', category: 'Appetizers', name: 'Fried Enoki', description: 'Perfect to share.', price: 169.0 },
@@ -407,7 +407,7 @@
     { id: 'ap10', category: 'Appetizers', name: 'Lumpiang Shanghai', description: 'Perfect to share.', price: 249.0 },
     { id: 'ap11', category: 'Appetizers', name: 'Home-made Cheese Sticks', description: 'Perfect to share.', price: 229.0 },
     { id: 'ap12', category: 'Appetizers', name: 'Fish and Chips', description: 'Perfect to share.', price: 249.0 },
-    { id: 'ap13', category: 'Appetizers', name: 'Tuna Sisig', description: 'Perfect to share.', price: 229.0 },
+    { id: 'ap13', category: 'Appetizers', name: 'Tuna Sisig', description: 'Perfect to share.', price: 279.0 },
     { id: 'ap14', category: 'Appetizers', name: 'Tofu Squares', description: 'Perfect to share.', price: 259.0 },
     { id: 'ap15', category: 'Appetizers', name: 'Hot Cheezy Dynamite', description: 'Perfect to share.', price: 269.0 },
     { id: 'ap16', category: 'Appetizers', name: 'Calamares Crisp', description: 'Perfect to share.', price: 289.0 },
@@ -441,7 +441,7 @@
     { id: 'pd08', category: 'Pinoy Dish', name: 'Crispy Pata', description: 'Made with love, made for you.', price: 950.0 },
     { id: 'pd09', category: 'Pinoy Dish', name: 'Papaitan', description: 'Made with love, made for you.', price: 400.0 },
     { id: 'pd10', category: 'Pinoy Dish', name: 'Beef Bulalo', description: 'Made with love, made for you.', price: 580.0 },
-    { id: 'pd11', category: 'Pinoy Dish', name: 'Sinigang (Pork or Shrimp)', description: 'Made with love, made for you.', price: 450.0 },
+    { id: 'pd11', category: 'Pinoy Dish', name: 'Sinigang Pork', description: 'Made with love, made for you.', price: 450.0 },
     { id: 'pd12', category: 'Pinoy Dish', name: 'Chopsuey', description: 'Made with love, made for you.', price: 399.0 },
     { id: 'pd13', category: 'Pinoy Dish', name: 'Ginisang Ampalaya', description: 'Made with love, made for you.', price: 359.0 },
     { id: 'pd14', category: 'Pinoy Dish', name: 'Crispy Pakbet', description: 'Made with love, made for you.', price: 359.0 },
@@ -453,7 +453,7 @@
     { id: 'ps05', category: 'Pasta', name: 'Tuna Pesto', description: 'Tender tuna, basil pesto, and a burst of fresh flavor.', price: 299.0 },
     { id: 'ps06', category: 'Pasta', name: 'Shrimp Aglio Olio', description: 'Garlic, olive oil, and juicy shrimp perfectly tossed.', price: 299.0 },
     { id: 'st01', category: 'Steak', name: 'T-Bone Steak', description: 'Grilled to perfection, served with rice, mashed potato, and vegetables.', price: 309.0 },
-    { id: 'st02', category: 'Steak', name: 'Porterhouse Steak', description: 'Grilled to perfection, served with rice, mashed potato, and vegetables.', price: 349.0 },
+    { id: 'st02', category: 'Steak', name: 'Porter House Steak', description: 'Grilled to perfection, served with rice, mashed potato, and vegetables.', price: 349.0 },
     { id: 'st03', category: 'Steak', name: 'Chuck Steak', description: 'Grilled to perfection, served with rice, mashed potato, and vegetables.', price: 599.0 },
     { id: 'su01', category: 'Sushi', name: 'Spam Roll', description: 'Every roll made fresh to order.', price: 249.0 },
     { id: 'su02', category: 'Sushi', name: 'Kani Roll', description: 'Every roll made fresh to order.', price: 249.0 },
@@ -469,7 +469,7 @@
     { id: 'sw04', category: 'Sandwiches', name: 'Clubhouse', description: 'Fresh, flavorful, made just for you.', price: 240.0 },
     { id: 'sw05', category: 'Sandwiches', name: 'Katsu Sando', description: 'Fresh, flavorful, made just for you.', price: 260.0 },
     { id: 'de01', category: 'Desserts', name: 'Leche Flan (Small)', description: 'Sweet ending, perfect day.', price: 70.0 },
-    { id: 'de02', category: 'Desserts', name: 'Leche Flan (Big)', description: 'Sweet ending, perfect day.', price: 140.0 },
+    { id: 'de02', category: 'Desserts', name: 'Leche Flan (Big)', description: 'Sweet ending, perfect day.', price: 180.0 },
     { id: 'de03', category: 'Desserts', name: 'Banana Split', description: 'Sweet ending, perfect day.', price: 250.0 },
     { id: 'de04', category: 'Desserts', name: 'Tiramisu', description: 'Sweet ending, perfect day.', price: 250.0 },
     { id: 'de05', category: 'Desserts', name: 'Coffee Jelly', description: 'Sweet ending, perfect day.', price: 190.0 },
@@ -560,7 +560,83 @@
     { id: 'hn02', category: 'Hot Non-Coffee', name: 'Biscoff Latte (Hot, Non-Coffee)', description: 'Hot.', price: 150.0 },
     { id: 'hn03', category: 'Hot Non-Coffee', name: 'Tsokolate de Batirol (Hot)', description: 'Hot.', price: 170.0 },
     { id: 'hn04', category: 'Hot Non-Coffee', name: 'Chamomile Tea (Hot)', description: 'Hot.', price: 80.0 },
+    { id: 'd1', category: 'Desserts', name: 'Basque Burnt Cheesecake', description: 'Slice, caramelized top.', price: 145.0 },
+    { id: 'd2', category: 'Desserts', name: 'Ube Halaya Tart', description: 'Purple yam custard tart.', price: 135.0 },
+    { id: 'f1', category: 'All-Day Breakfast', name: 'Vista Breakfast Plate', description: 'Longsilog with garlic rice and egg.', price: 220.0 },
+    { id: 'p0697b53', category: 'Cafe Frappe', name: 'Extra Coffee Jelly (sinkers)', description: '', price: 35.0 },
+    { id: 'p18c3c49', category: 'Silog Meals', name: 'PLAIN RICE', description: '', price: 35.0 },
+    { id: 'p1d12214', category: 'Appetizers', name: 'Addtnl Cheese Sauce', description: '', price: 30.0 },
+    { id: 'p223685f', category: 'Desserts', name: 'Blueberry Cheesecake', description: '', price: 199.0 },
+    { id: 'p4d37157', category: 'Silog Meals', name: 'Porksilog', description: '', price: 210.0 },
+    { id: 'p629a14b', category: 'Desserts', name: 'Strawberry Cheesecake', description: '', price: 199.0 },
+    { id: 'p6c9b3f7', category: 'Silog Meals', name: 'Fried Rice', description: '', price: 40.0 },
+    { id: 'p8304f59', category: 'Classic Coffees', name: 'OATMILK', description: '', price: 40.0 },
+    { id: 'p94902c6', category: 'Cafe Frappe', name: 'Extra Whipped cream', description: '', price: 30.0 },
+    { id: 'p98222a4', category: 'Pinoy Dish', name: 'Fried rice platter', description: '', price: 170.0 },
+    { id: 'p9dc869d', category: 'Appetizers', name: 'Addtnl Mashed Potato', description: '', price: 50.0 },
+    { id: 'pa979f2c', category: 'Pinoy Dish', name: 'Rice platter', description: '', price: 150.0 },
+    { id: 'pafba8d2', category: 'Hot Non-Coffee', name: 'chamomile tea hot', description: '', price: 80.0 },
+    { id: 'pbb6eb07', category: 'Desserts', name: 'Belgian Chocolate Cake', description: '', price: 210.0 },
+    { id: 'pc89cc1d', category: 'Cafe Frappe', name: 'Coffee jelly frappe', description: '', price: 210.0 },
+    { id: 'pd4ebf0e', category: 'Appetizers', name: 'Garlic Aioli', description: '', price: 30.0 },
+    { id: 'pf9a6aab', category: 'Pinoy Dish', name: 'Sinigang Shrimp', description: '', price: 450.0 },
+    { id: 'sp01', category: 'Con Vista Specials', name: 'Braised Osso Buco', description: 'Slow-braised veal shank in a rich aromatic sauce, fork-tender with a savory reduction.', price: 979.0 },
+    { id: 'sp02', category: 'Con Vista Specials', name: 'Creamy Salmon Supreme', description: 'Seared salmon in a rich, velvety cream sauce.', price: 989.0 },
+    { id: 'sp03', category: 'Con Vista Specials', name: 'Chicken Diane', description: 'Pan-seared chicken in a creamy mushroom and mustard sauce.', price: 699.0 },
+    { id: 'sp04', category: 'Con Vista Specials', name: 'Spicy Pork Salpicao', description: 'Sautéed pork bites in a garlicky soy glaze with a chili kick.', price: 749.0 },
+    { id: 'tw01', category: 'Towers', name: 'T Sunrise Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw02', category: 'Towers', name: 'Galaxy Tower', description: '3 liters. Perfect for groups.', price: 550.0 },
+    { id: 'tw03', category: 'Towers', name: 'F Mountain Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw04', category: 'Towers', name: 'Red Alert Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw05', category: 'Towers', name: 'Velocity Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw06', category: 'Towers', name: 'Unicorn Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw07', category: 'Towers', name: 'S Driver Tower', description: '3 liters. Perfect for groups.', price: 550.0 },
+    { id: 'tw08', category: 'Towers', name: 'C Maxima Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw09', category: 'Towers', name: 'Moonlit Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw10', category: 'Towers', name: 'Trivista Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'tw11', category: 'Towers', name: 'T Reggae Tower', description: '3 liters. Perfect for groups.', price: 600.0 },
+    { id: 'be01', category: 'Cocktails and Beers', name: 'San Mig Light', description: '', price: 90.0 },
+    { id: 'be02', category: 'Cocktails and Beers', name: 'San Mig Apple', description: '', price: 90.0 },
+    { id: 'be03', category: 'Cocktails and Beers', name: 'Pale Pilsen', description: '', price: 90.0 },
+    { id: 'be04', category: 'Cocktails and Beers', name: 'Red Horse (350ml)', description: '', price: 90.0 },
+    { id: 'be05', category: 'Cocktails and Beers', name: 'Red Horse (500ml)', description: '', price: 120.0 },
+    { id: 'be06', category: 'Cocktails and Beers', name: 'Corona', description: '', price: 150.0 },
+    { id: 'be07', category: 'Cocktails and Beers', name: 'Heineken', description: '', price: 150.0 },
+    { id: 'be08', category: 'Cocktails and Beers', name: 'Beer Bucket', description: 'Save ₱40 vs buying individually.', price: 550.0 },
+    { id: 'ck01', category: 'Cocktails and Beers', name: 'Margarita', description: 'Crafted fresh at the bar.', price: 209.0 },
+    { id: 'ck02', category: 'Cocktails and Beers', name: 'Tequila Sunrise', description: 'Crafted fresh at the bar.', price: 189.0 },
+    { id: 'ck03', category: 'Cocktails and Beers', name: 'Malibu Sunset', description: 'Crafted fresh at the bar.', price: 209.0 },
+    { id: 'ck04', category: 'Cocktails and Beers', name: 'Classic Daiquiri', description: 'Crafted fresh at the bar.', price: 209.0 },
+    { id: 'ck05', category: 'Cocktails and Beers', name: 'Espresso Martini', description: 'Crafted fresh at the bar.', price: 230.0 },
+    { id: 'ck06', category: 'Cocktails and Beers', name: 'Mojito', description: 'Crafted fresh at the bar.', price: 189.0 },
+    { id: 'ck07', category: 'Cocktails and Beers', name: 'Gin Tonic', description: 'Crafted fresh at the bar.', price: 230.0 },
+    { id: 'peecf63b', category: 'Cocktails and Beers', name: 'Redhorse 500ml Bucket', description: '', price: 600.0 },
+    { id: 'psmirnof', category: 'Cocktails and Beers', name: 'Smirnoff', description: '', price: 100.0 },
+    { id: 'p42d0559', category: 'Hard Liquors', name: 'Alfonso with coke', description: '', price: 600.0 },
+    { id: 'p59bf100', category: 'Hard Liquors', name: 'Alfonso only', description: '', price: 500.0 },
+    { id: 'p86dbe84', category: 'Hard Liquors', name: 'Jose Cuervo', description: '', price: 1600.0 },
+    { id: 'od01', category: 'Other Drinks', name: 'Bottled Water 500ml', description: '', price: 35.0 },
+    { id: 'od02', category: 'Other Drinks', name: 'Iced Tea (Glass)', description: '', price: 70.0 },
+    { id: 'od03', category: 'Other Drinks', name: 'Iced Tea (Pitcher)', description: '', price: 120.0 },
+    { id: 'od04', category: 'Other Drinks', name: 'Coke / Sprite / Royal (Mismo)', description: '', price: 35.0 },
+    { id: 'od05', category: 'Other Drinks', name: 'Coke / Sprite / Royal 1.5L', description: '', price: 140.0 },
+    { id: 'p19e5c38', category: 'Other Drinks', name: 'Coke can', description: '', price: 70.0 },
+    { id: 'p40eb2a3', category: 'Other Drinks', name: 'MOUNTAIN DEW', description: '', price: 35.0 },
+    { id: 'p5a59aeb', category: 'Other Drinks', name: 'Bottle water', description: '', price: 35.0 },
+    { id: 'p696f529', category: 'Other Drinks', name: 'Mountain Dew (incan)', description: '', price: 75.0 },
+    { id: 'p6a2464a', category: 'Other Drinks', name: 'Con vista hot', description: '', price: 150.0 },
+    { id: 'p7ba8a2d', category: 'Other Drinks', name: 'Coke zero', description: '', price: 140.0 },
+    { id: 'p91d7922', category: 'Other Drinks', name: 'ICE TEA TOWER', description: '', price: 200.0 },
+    { id: 'pa8412f6', category: 'Other Drinks', name: 'Pineapple in can', description: '', price: 75.0 },
+    { id: 'pbfe5a07', category: 'Other Drinks', name: 'Royal can', description: '', price: 70.0 },
+    { id: 'pf2dcc3d', category: 'Other Drinks', name: 'Add shot esp', description: '', price: 40.0 },
+    { id: 'ktv1', category: 'KTV Packages', name: 'CV1 Package', description: 'Up to 10 pax, 2 hrs, KTV Cabin 3. 20 bottles of beer or 2x 3L cocktail towers, pork sisig, chicken wings, calamares crisp.', price: 4520.0 },
+    { id: 'ktv2', category: 'KTV Packages', name: 'CV2 Package', description: 'Up to 10 pax, 2 hrs. 20 bottles of beer or 2x 3L towers, chicken wings, crispy pata, calamares, nachos overload, pork sisig, pancit.', price: 6250.0 },
+    { id: 'ktv3', category: 'KTV Packages', name: 'CV3 Package', description: 'Up to 15 pax, 2 hrs. 30 bottles of beer or 3x 3L towers, chicken wings, crispy pata, calamares, nachos overload, 2x pork sisig, tokwat baboy, sizzling hotdog, pancit.', price: 9250.0 },
   ];
+
+  // POS photo file per item (menu_items.photo_url) - refreshed live below; pictures live in menu-thumbs.js
+  let PHOTO_FILE = {"ap01":"ap01.jpg","cc01":"cc01.jpg","hc01":"hc01.jpg","hc04":"hc04.jpg","hc02":"hc04.jpg","hc03":"hc04.jpg","hc05":"hc04.jpg","hc06":"hc04.jpg","hc07":"hc04.jpg","pd04":"pd04.jpg","pd10":"pd10.jpg","tw08":"tw08.jpg","cc02":"cc02.jpg","cc04":"cc04.jpg","cc05":"cc05.jpg","cc03":"cc03.jpg","cc06":"cc06.jpg","cc07":"cc07.jpg","cc08":"cc08.jpg","cc09":"cc09.jpg","cc10":"cc10.jpg","cc11":"cc11.jpg","cc12":"cc12.jpg","cc13":"cc13.jpg","cc14":"cc14.jpg","cc15":"cc15.jpg","cc16":"cc16.jpg","hc08":"hc04.jpg","hc09":"hc04.jpg","hc10":"hc04.jpg","hc11":"hc04.jpg","hc12":"hc04.jpg","hc13":"hc13.jpg","hc14":"hc14.jpg","cf01":"cf01.jpg","cf02":"cf01.jpg","cf03":"cf03.jpg","cf04":"cf03.jpg","cf05":"cf05.jpg","cf06":"cf05.jpg","cf07":"cf07.jpg","cf08":"cf07.jpg","cf09":"cf09.jpg","cf10":"cf09.jpg","cf11":"cf11.jpg","cf12":"cf11.jpg","cf13":"cf13.jpg","cf14":"cf13.jpg","cf15":"cf15.jpg","cf16":"cf15.jpg","cf17":"cf17.jpg","cf18":"cf17.jpg","cf19":"cf19.jpg","cf20":"cf19.jpg","me04":"me04.jpg","me01":"me01.jpg","me09":"me09.jpg","me02":"me02.jpg","me03":"me03.jpg","me07":"me07.jpg","me08":"me08.jpg","me06":"me06.jpg","me05":"me05.jpg","me10":"me05.jpg","nc07":"nc07.jpg","nc14":"nc07.jpg","nc10":"nc10.jpg","nc17":"nc10.jpg","nc13":"nc13.jpg","nc20":"nc13.jpg","nc09":"nc09.jpg","nc16":"nc09.jpg","nc11":"nc11.jpg","nc18":"nc11.jpg","nc12":"nc12.jpg","nc19":"nc12.jpg","nc08":"nc08.jpg","nc15":"nc08.jpg","nc03":"nc03.jpg","nc05":"nc05.jpg","nc01":"nc01.jpg","nc04":"nc04.jpg","nc06":"nc06.jpg","nc02":"nc02.jpg","hn04":"hn04.jpg","hn01":"hn01.jpg","hn02":"hn02.jpg","hn03":"hn03.jpg","ap02":"ap02.jpg","ap03":"ap03.jpg","ap04":"ap04.jpg","ap05":"ap05.jpg","ap06":"ap06.jpg","ap07":"ap07.jpg","ap08":"ap08.jpg","ap09":"ap09.jpg","ap10":"ap10.jpg","ap11":"ap11.jpg","ap12":"ap12.jpg","ap14":"ap14.jpg","ap15":"ap15.jpg","ap16":"ap16.jpg","ap17":"ap17.jpg","ap18":"ap18.jpg","ap19":"ap19.jpg","ap20":"ap20.jpg","bf01":"bf01.jpg","bf02":"bf02.jpg","sl01":"sl01.jpg","sl02":"sl02.jpg","sl08":"sl08.jpg","sl07":"sl07.jpg","sl10":"sl10.jpg","ps01":"ps01.jpg","ps02":"ps02.jpg","ps03":"ps03.jpg","ps05":"ps05.jpg","ps04":"ps04.jpg","ps06":"ps06.jpg","pd06":"pd06.jpg","pd08":"pd08.jpg","pc01":"pc01.jpg","st02":"st02.jpg","st01":"st01.jpg","su05":"su05.jpg","sa01":"sa01.jpg","sa02":"sa02.jpg","sa03":"sa03.jpg","su01":"su01.jpg","su02":"su02.jpg","su03":"su03.jpg","su04":"su04.jpg","sw04":"sw04.jpg","de01":"de01.jpg","sp01":"sp01.jpg","sp02":"sp02.jpg","sp03":"sp03.jpg","sp04":"sp04.jpg","ck02":"ck02.jpg","ck01":"ck01.jpg","ck05":"ck05.jpg","ck06":"ck06.jpg","ck03":"ck03.jpg","tw03":"tw03.jpg","tw07":"tw07.jpg","tw09":"tw09.jpg","tw04":"tw04.jpg","de02":"de02.jpg","tw11":"tw11.jpg","tw01":"tw01.jpg","tw10":"tw10.jpg","tw06":"tw06.jpg","tw05":"tw05.jpg","tw02":"tw02.jpg","be04":"be04.jpg","be05":"be04.jpg","ktv1":"ktv1.jpg","ktv2":"ktv2.jpg","ktv3":"ktv3.jpg","de03":"de03.jpg","de05":"de05.jpg","de04":"de04.jpg","be08":"be08.jpg","ap13":"ap13.jpg"};
 
   const APPETIZER_IMAGES = {
     ap01: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgICRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCABkAGQDASIAAhEBAxEB/8QAHAAAAQUBAQEAAAAAAAAAAAAABQADBAYHCAEC/8QAOxAAAgEDAgQEAwYDBwUAAAAAAQIDBAURACEGEjFBBxNRYRQicQgyQlKBkRWhsRYjYoLB0eFDU5Ki8P/EABsBAAEFAQEAAAAAAAAAAAAAAAQBAgMFBgAH/8QAMBEAAgEDAgIIBQUBAAAAAAAAAQIAAxEhBBIxUQUTIkFhcYHRMqGxwfAGFDOR4UL/2gAMAwEAAhEDEQA/AOYSscijlL+az9CNsasa0nw1IsbkAKMFvQEbnVbRuRlYAEqQcHRN7x8ZRzxTjEjEFCvTHpoKsrNa3CTqQJ8i5MsoHO8gHynJ264BH6acq7cZJfMhXO+Co7H00MR2hkEigZU5GemptHeZqVCqqGkYn5z7/wCulZCMpODc4/bJTNdWMuELKRjoM40Z5VVWVWDsOuOg1DekBVDyYON29P11Po4VgpfKBHOQWx66r67hjuEeBIEkwapZRnKr83+Ie2mKqmlraNgwKsvzbe3fUyoenpp4fOyeYHJX8I9dSJaxU+SniDuQQoHUtjbbuDpysRYqJ0rVWlT5MLTKHAGBMu4Yeh1HB1fOGfDnje/80tu4Su7xvuwekZIZM+jMABo1L9mnxHmn54eGqmOFhnDzw5U+n39HgngRIzaZhTyLGrEkAnvr1HWWUAHAG+T31eLt4AeJdpQyPwjcp4x3p1WVh+iMTqkXWyXSxy+VdbbW2+Q/hqoHiJ/8gNO2XzEvG/PjDNlc77HOlqLg6Wl6sRLxHpr6j2R2OpE1G9PO8MuAUODg6cqKiD4cRQBt9iGXppC97Wi25weHOdPwMFkSTGeVgceumCMadgywONPbhEHGEbjdHrVChPKQEkgHqdWfh+x3XiO5W+ktVDUV1W8ZAihQsfqfQe52094UeEN78Wb38HQg0ttp2HxtxdcpCPyr+ZyOi/qcDXaXCvCnDfhTZEtFhpeaXA82aU80sx/NI/8AQDAHYDQz0F2i+BJASTZcmZBwN9k1FC3Dji58g3b4CifGAezyn+ij9dbDYrBwRwTCsPD9io4WT/qRxAyH6yNlj++oV0vjzPmrqUA6hC2APoNCzfqFTg1Kj3wcf00M2uo0ztBA8zmG0+jqji5BPlLyOJFfI8kpnoc82NVTiG8eIdNXrPZv4JW2hV55AsL/ABQP5eUtyhf8QJPtpqludNUtiCojkPorb/tohBVPE4ZGII1Kur3rg+ojG0mw8PQwLReJXE8dQsddS2ohwWAVXBH650Rl8RbBd4GoeILOlRETh42jWojPvysP9DoZx1Z1mpP7RUSYkpziriXYMp25x6HOM/vqh0tasIkkdR5hYEk9hqrra3UaZ9pa4+0Mp6WjWW4Wxh+5eFn2e7tWyVMzWegmOA8EdzalCnGd4uYcpwR2GlrGvF9YaniiB4OFaSuf4KLzqgRSEyOSxyxUgE8pUfQDS1f0q6sgY98qHosrECZdc6emMszxyFJFb50O4J9joPIQNgNSo5TG5P3gfvA99NVlOIisiHMT7qfT21FTG3BMcw5SIRnVy8KfDS6eJnFUFmt+YoseZVVRXK00IO7n1PZR3PtnVPClmCgEk7ADqdd8+BPhrH4XcBQpUxKLzcAtTXN3DkfLF9EBx9Sx76I8+EilhobdYvDDhimsdmp1paWBcKBu7sersfxOTuT/AMapVz4qneWduSSCCNeZpSuebPoepPrp7iGvmuN0maQny0kIRc7EDvt6nVJvlHPe3mgeOohVBy4ikYeYD932xnJOM9BnWM1/Sb6iqUU2UTWaLo9aFIORdjCVS1TDRy1UkqzM7fICOQ4J2AxnfGncvHTmWoKRcql3XP3APU6y26SV1uj8qe+xyiNmKBZCCpVtlHcnB6nGpFn4hi8pRNKjVVURMFil5wq8vVtsc7EEEdQMdc6Cbo4ldwN48dMbamzb85oqxxV1PHNT8rFiGDEHp6gg+midtvU9BIsdXKZabOPMbdo/qe4/noBR3R7n5MEcKw0xp2Ms1O+FR9vkx323z2xoi3LPSNJTmOUEYXf5W7dRoWm76d70z+eMtOxqEs4uPzhNFtapXCppJAHinppFcHoQRrJ7DZqaou1RDWyCWljVSMAlSWzsx9Rg7e+r7Fcjw/wNWXickSPTfDUyd3c7ZH/3bX1wbLSS2mCCLy40ZQQijcr7/wDOrTpbUblorexYH52tM9SU02qEZAIH9cZHFlp2GXtUbHoGQbMBsD7bY0tPXO1XeGp5LdVTR0+MgRlBkkknPN37fppaqTe+b/npFFTl9ZwxWUstLIeYEp2YdDqRSU5qrfMzDmjDdB1U/mGiVRM6iRolGyhgpGQw9cacpuZqQt8MqPnOF2D/AO2t6ax2ylKi8u/2cvDuPifxHomrqcT0duT4+YMNuZCPLHuCxBx7HXXA43tlw4mruHBKqVFJy8rk7O2PmH6ZA1kv2T7bTWjgriPih8hJqkx5fqscCcx/Tmdv20Dqa56eqF4iOKmZ2nZ26szHLf11DrtcdMqXF93Hykul0wrFjy4ec0O90k9trZYpIjzc5I5tgVz1HroNV01RUW+VPiRDM5+R1PIMdlyc/TOi3D/HsF4t5jrofiYoh/eRTKeeL3z1A99TTFw1dwskFfNRrnPLIA6MfrtrNVtCu7dRcG/ccH54mhpa8hdtVSPEZHvMHvtoqIY3opYZJGkdZCHOSd9h03GwBB07Q8HiouxYrDRwygsq0sOEg6DBycr19dbDLwVw/wA6v/GadeU55wrhmO/Ug++nYuH+FaKNo3rjNFz+Z5UMO3PnOfmJ76KB1G3YLD1HvAWo6YvvJJ9D7QXaqGntqSwwUiiU4zIvRvlALH31YKHhyCCnFVdM0tIDzFOjz+yjsPfXh4gt9uTNtoUjkHSeoPO31A6DVK4o48kaQqjyVta+F+Uc3ID+I+gGok09Kn2qh3Hl3evOFVNXUcbaQ2jn3/5G/EviWv4hrIbXbAkMNOoKRgZSFfwg+/f9tecC8QSWVoqWoqzISCqO4C5Ofu/v00M4IEF/M9PSTyTzGVi0rrgSH8Q33x03HTbVltfhXPdD59yrTSCJswRR/M6kfdZievrjQGqZ9Q5V8Hyz+eEajU6S7e6aHSXN6iBZHEWSNubHTS0CW0mmijhW4xymNeVmlwjZHtnS1U/u6y44+ojTRpHN/kZyGBAsYSM83IeXJ6jOoIrpDVPRuAjn5VbP3vb66ZpLg7RIz4IQ+XLjrynodMVppYqwRNzFTtIR1VuzDXpFOhYkNmUBbE7U8HrbT0HgHRJImEqoZ5Jh0zzysD/LGm6iw2ynmp6h6WIxRbhNyM9ic9dfPh78VW/Zrtgo5ElqPgWVHJwGKzMMn9teWitW80TRVA/vs8rx82yn6+mqT9QX6xFv/wA4lj0aOwzeMLfxSjzKzxr5bLgkDr9fXUatqLZW0MVF5MZCMrBSo5Qc9dU3jbhuupqE1VlqKyWVTyusRIXkOx+uNUpuLK62E009yeWblDF/LDCIDpk+/TWfRKzrZSLyz2Ux2rzX7mtrmrYQlHBNVSjy2c/dC/7/AM8aC3jhSqpLTGltiklkwztVecQUYYwpByCDv9NtROBZrpULJdLn5KqzmCNIkPXbJJPbtq/01aKlHhdo1iXZh66j65lqbDx8I11Kjs5EoFTwk95tdHBJc56CsUc07QkSeYp9CRj03Hr00rf4UCmWphqK1jCoUlo1xJP3YEnp2G3rq8GyU1YH+CnfCHpLkqx6jH09dBRdZqWnM1YDSMz+VFFLgHb8SgnDZHTUy1apsCMc+73jLhsKfeEaSms/DtHTUlDTwwJH8sQH3t9zknc++dN3C+u6osKGSU5wqjr20MreJEmqamP4WOodV5ZECkO22TjG+cdB7jUyKhtUEjCK3mGJgoJEhDAgfuNB6pjlmfF7SWmm211zAVdFxC0wc09MpZQcSOSdLUjima7S3CM0HD810hEIHn+Yo3yfl++vT6d9LU9Po+k6hlIsfKL+5YYInI9ktq1zzc8rJyjGF6nOvL3bRDCZA3NJFgOfzDsdDaaunoJGkgbBYcpz3Gi1KzT0xp5wfNKFWz1wd1OvRmDK26+Jlwb4nXf2aK2K7eBgoIZed6KSppyud1JPmAf++olZQvY7jHXp5hp5QDNJkKCp9vUZzqg/Yy4qFv4ivvCdU3Ka6JauAH/uRZVwPcqwP+TW48V2aKb4i1yxhoJBhB6Dtj6f6aq+nNKKiLU7xiHdGVtrMnONRvHXwsrNGYWQBFAPzZ7/ALazqk8Gqd7tcau5XKRqZ5i9PS0/ddiA7nJznOMdh11eeE6aW02aOOuqRLLCWDSP6AkAD/KBr5jrILnfpGgroxHCoLoo3JPTPp31kOueg3ZOTj/Zbbd1x3CPVVu8u20sEcksNNTp5XlYH94MYXJ67dc99ZP/AGu4ipuI0+HoWNCJWiKzHaTHMM5AOOm36a0HxFvsPDthZqmXzIKlhTK3Py4aTYEH29tUmzXVJ+J6eSekeVaGmV4RGSFyThzjp0x9cHT6VNSS9Vbi1rmOQkLZZZqHj+noqYLdZjAwIjdEBIGTjrjON9/TVjuE1tu8KrNBBVOmGhWRcmJh+LPr79dB6ThY3Bqusnlib4gllCgARr2BH06++qjV1d0tlZPN5ziCnzF5Z+6xHf19NAMr/DSNvP7cpOKdNzfvlzuvCMlxoqeY3GelqZZfNlMbbuuD8hPUHl2JGpVE9JZ6J+eQMhXnZm3xyjG5PQDGgPDvFMl9SEqeSMnkQu2cevTQrxb+NltsVqSmZVklV5ZubAESbnp+n89OXrK1UU27IGPf8MTq9uDmH7fxjDJSqxijlG+GG+3ppapdk4bpprZBNRPG1PIvMjI+Aw9dLSMApKhjYSXq6ZyROYm0QtE8lRdIzI3N5g5G9xjS0tept8JmMHGWzge6VVh8R+GLtQP5dV8fFGx7MrPyMD9VYg67p4ohTmpZ8fPlkz6jGdLS0Lqc6Vr+H1k9D+cTn3jvie7WmappaOqMUbTkdASATvgnpq2+ElvgeyvWS80tRWSsZZJG5ieXYfy0tLWMKLsBtxM0dU2T+pC8YYYhbhStEkkSP5yhxnlZVJBGgHCtgo4eKbKUMwHwk0rqXyJGwD83qMsTpaWh6LHqyt8Xb6GdbAPfb7zU6mY09ikljVFYrnYawzxMudWap4IpjThqfzC0WxJH1zpaWk0AB1ag8hOT4Gmg8J0kNv4XpZKdFVzGhJwNyRude00S3O9V1PWEzRCILyOcjBXcfQ6WloOnnVkH8zJ3/jJg6vuCcJNDbbTb6KGlEYdU5WAUkkdiPT66Wlpa2iqCLkSmYm8//9k=',
@@ -653,7 +729,10 @@
   let menuPainted = false;      // lets the very first menu render animate in, but not background re-renders
 
   const peso = n => '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
-  const CATEGORIES = [...new Set(MENU_ITEMS.map(i => i.category))];
+  // Categories the owner does not want on the online menu (exact POS/page category names), e.g. ['KTV Packages','Hard Liquors'].
+  const HIDDEN_CATEGORIES = [];
+  MENU_ITEMS = MENU_ITEMS.filter(i => HIDDEN_CATEGORIES.indexOf(i.category) < 0);
+  let CATEGORIES = [...new Set(MENU_ITEMS.map(i => i.category))];
 
   function cssSafe(s) { return s.replace(/[^a-z0-9]/gi, '_'); }
   function escapeHtml(s) {
@@ -710,6 +789,21 @@
       </section>
     `).join('');
     menuPainted = true;
+    applyThumbs();
+  }
+
+  // Pictures come from the POS photos (menu-thumbs.js, loaded in the background). Until a picture is ready
+  // the round slot just shows a soft tint, so the menu never waits for images.
+  const BLANK_IMG = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+  function applyThumbs() {
+    const T = window.MENU_THUMBS || {};
+    document.querySelectorAll('#menu img.item-thumb').forEach(im => {
+      const k = im.getAttribute('data-k');
+      let d = null;
+      if (k) d = /^https?:/i.test(k) ? k : T[k];
+      if (!d) d = APPETIZER_IMAGES[im.getAttribute('data-id')] || null;
+      if (d && im.getAttribute('src') !== d) im.setAttribute('src', d);
+    });
   }
 
   function qtyForBaseId(id) {
@@ -758,10 +852,10 @@
 
   function itemRow(item) {
     const soldOut = SOLD_OUT_IDS.has(item.id);
-    const thumbSrc = APPETIZER_IMAGES[item.id];
+    const hasPhoto = !!(PHOTO_FILE[item.id] || APPETIZER_IMAGES[item.id]);
     return `
       <div class="item-card ${soldOut ? 'sold-out' : ''}">
-        ${thumbSrc ? `<img src="${thumbSrc}" class="item-thumb" alt="${escapeHtml(item.name)}">` : ''}
+        <img class="item-thumb" data-id="${item.id}" ${PHOTO_FILE[item.id] ? `data-k="${escapeHtml(PHOTO_FILE[item.id])}"` : ''} alt="${hasPhoto ? escapeHtml(item.name) : ''}" src="${BLANK_IMG}">
         <div class="item-info">
           <p class="item-name">${escapeHtml(item.name)}</p>
           ${item.description ? `<p class="item-desc">${escapeHtml(item.description)}</p>` : ''}
@@ -1287,6 +1381,7 @@
     document.querySelectorAll('.order-type-btn, .payment-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('paymentNote').classList.add('hidden');
 
+    playOrderChime();
     showReceipt({
       items: capturedItems,
       subtotal: subtotal,
@@ -1309,22 +1404,89 @@
   // table — no code changes needed, same as editing flavors.
   let SOLD_OUT_IDS = new Set();
 
+  // POS-only helper rows that customers should not see (price 0 / covered by the Fries flavor picker).
+  const HIDDEN_IDS = new Set(['p0e19b20', 'pbb1e5d1', 'pd17d2b3']);
+  const NAME_OVERRIDE = { ap01: 'Fries' };            // the POS row is named after one flavor
+  const CAT_MAP = { 'Pinoy Dishes (For Sharing)': 'Pinoy Dish', 'Beers': 'Cocktails and Beers' };
+  const CAT_OVERRIDE = { p7ba8a2d: 'Other Drinks', pbfe5a07: 'Other Drinks', pafba8d2: 'Hot Non-Coffee', pf9a6aab: 'Pinoy Dish' };
+  const CAT_ORDER = ['Con Vista Specials', 'Towers', 'Cocktails and Beers', 'Hard Liquors', 'Other Drinks', 'KTV Packages'];
+
+  // The POS (menu_items) is the source of truth: on every load the page pulls price, name, flavors, sold-out
+  // status, new items and picture file from it. Deleted POS items disappear. Items already on this page keep the
+  // page's own category and description; the built-in MENU_ITEMS list is only the fallback if the fetch fails.
   async function syncLiveMenuDataFromSupabase() {
-    const { data, error } = await restRequest('/menu_items?select=id,flavors,available', 'GET');
-    if (error || !Array.isArray(data)) return; // keep local fallback as-is
-    const freshOptions = {};
-    const freshSoldOut = new Set();
+    const q = '/menu_items?select=id,category,name,description,price,available,flavors,photo_url,deleted_at&limit=2000';
+    const { data, error } = await restRequest(q, 'GET');
+    if (error || !Array.isArray(data) || data.length === 0) return; // keep local fallback as-is
+    const rowById = {}; data.forEach(r => { rowById[r.id] = r; });
+    const freshOptions = {}, freshSoldOut = new Set(), freshPhoto = {};
     data.forEach(row => {
-      if (Array.isArray(row.flavors) && row.flavors.length > 0) {
-        freshOptions[row.id] = { label: 'Flavor', choices: row.flavors };
-      }
-      if (row.available === false) {
-        freshSoldOut.add(row.id);
-      }
+      if (row.deleted_at) return;
+      if (Array.isArray(row.flavors) && row.flavors.length > 0) freshOptions[row.id] = { label: 'Flavor', choices: row.flavors };
+      if (row.available === false) freshSoldOut.add(row.id);
+      if (row.photo_url) freshPhoto[row.id] = String(row.photo_url).replace(/^menu-photos\//, '');
     });
+    const out = [], seen = new Set();
+    MENU_ITEMS.forEach(it => {
+      const row = rowById[it.id];
+      if (row && row.deleted_at) return;                       // removed in the POS
+      if (!row) { out.push(it); seen.add(it.id); return; }     // only on this page - keep
+      const price = Number(row.price);
+      if (!(price > 0)) return;
+      seen.add(it.id);
+      out.push({ id: it.id, category: it.category, name: NAME_OVERRIDE[it.id] || row.name || it.name,
+                 description: it.description || (row.description || '').trim(), price: price });
+    });
+    const added = [];
+    data.forEach(row => {
+      if (seen.has(row.id) || row.deleted_at || HIDDEN_IDS.has(row.id) || !row.name) return;
+      const price = Number(row.price); if (!(price > 0)) return;
+      const cat = CAT_OVERRIDE[row.id] || CAT_MAP[row.category] || row.category || 'Others';
+      added.push({ id: row.id, category: cat, name: row.name, description: (row.description || '').trim(), price: price });
+    });
+    const known = [...new Set(out.map(i => i.category))];
+    added.sort((x, y) => {
+      const rx = known.indexOf(x.category) >= 0 ? -1 : (CAT_ORDER.indexOf(x.category) >= 0 ? CAT_ORDER.indexOf(x.category) : 99);
+      const ry = known.indexOf(y.category) >= 0 ? -1 : (CAT_ORDER.indexOf(y.category) >= 0 ? CAT_ORDER.indexOf(y.category) : 99);
+      return rx - ry;
+    });
+    const next = out.concat(added).filter(i => HIDDEN_CATEGORIES.indexOf(i.category) < 0);
+    if (!next.length) return;
+    const oldCats = CATEGORIES.join('|');
+    MENU_ITEMS = next;
+    CATEGORIES = [...new Set(next.map(i => i.category))];
     ITEM_OPTIONS = freshOptions;
     SOLD_OUT_IDS = freshSoldOut;
-    renderMenu(); // re-render so any newly sold-out items show correctly
+    PHOTO_FILE = freshPhoto;
+    Object.keys(cart).forEach(k => {                           // anything already in the cart gets the new price
+      const it = next.find(i => k === i.id || (k.indexOf(i.id) === 0 && !/[a-z0-9]/i.test(k.charAt(i.id.length))));
+      if (it) cart[k].price = it.price;
+    });
+    if (CATEGORIES.join('|') !== oldCats) {
+      if (currentCategoryId && !CATEGORIES.some(c => cssSafe(c) === currentCategoryId)) currentCategoryId = null;
+      renderCategoryNav();
+    }
+    renderMenu();
+    updateCartBar();
+  }
+
+  // Short two-note chime (and a buzz on phones) on the customer's phone once their order is in.
+  function playOrderChime() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ctx = new AC();
+      [[880, 0], [1175, 0.18]].forEach(([f, t]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.5);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.55);
+      });
+      if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+    } catch (e) {}
   }
 
   // ---- Rotating verse banner: a new random line every 60 seconds, with a
@@ -1380,6 +1542,14 @@
   renderCategoryNav();
   renderMenu();
   syncLiveMenuDataFromSupabase();
+  // POS pictures (160px thumbnails) - loaded after the menu is already on screen
+  (function () {
+    try {
+      const sc = document.createElement('script'); sc.src = 'menu-thumbs.js'; sc.async = true;
+      sc.onload = sc.onerror = applyThumbs;
+      document.head.appendChild(sc);
+    } catch (e) {}
+  })();
 </script>
 </body>
 </html>
