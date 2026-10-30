@@ -206,6 +206,9 @@
   .checkout-item-row{ display:flex; justify-content:space-between; font-size:14px; padding:4px 0; }
   .checkout-item-row + .checkout-item-row{ border-top:1px solid var(--brand-border); }
   .checkout-item-right{ display:flex; align-items:center; gap:8px; }
+  .promo-row{ color:var(--brand-green-deep); font-weight:600; }
+  .promo-free, .receipt-free{ color:var(--brand-green); font-weight:700; letter-spacing:.3px; }
+  .promo-spacer{ display:inline-block; width:22px; }
   .remove-line-btn{ background:#f0efee; color:var(--brand-muted); width:22px; height:22px; border-radius:999px; font-weight:700; font-size:14px; line-height:1; }
   .empty-cart-note{ font-size:13px; color:var(--brand-muted); text-align:center; padding:8px 0; }
   .choice-grid{ display:grid; gap:8px; margin-bottom:16px; }
@@ -1026,6 +1029,22 @@
   // The rate itself is intentionally never shown in any customer-facing text —
   // only the resulting peso amount is displayed, labeled generically.
   const SERVICE_CHARGE_RATE = 0.05;
+  // ---- Promo: 1 FREE iced tea pitcher for every 2 Pinoy Dishes (Pancit doesn't count) ----
+  const PROMO = {
+    category: 'Pinoy Dish',
+    excludeIds: ['pc01', 'pc02', 'pc03'],     // the three Pancit items
+    dishesPerFree: 2,
+    freeName: 'Iced Tea Pitcher (FREE)',
+    freeCategory: 'Refreshers'                // a drink category, so kitchen/barista boards flag it as a drink
+  };
+  function promoQualifyingDishes() {
+    return Object.entries(cart).reduce((sum, [key, i]) =>
+      (i.category === PROMO.category && !PROMO.excludeIds.includes(key.split('::')[0])) ? sum + i.qty : sum, 0);
+  }
+  function freePitcherCount() { return Math.floor(promoQualifyingDishes() / PROMO.dishesPerFree); }
+  // A line with a price of 0 (the free pitcher) reads FREE instead of ₱0.00
+  function lineAmount(i) { return i.price === 0 ? 'FREE' : peso(i.qty * i.price); }
+
   function computeCharges() {
     const subtotal = cartTotal();
     const serviceCharge = orderType === 'dine-in' ? Math.round(subtotal * SERVICE_CHARGE_RATE * 100) / 100 : 0;
@@ -1065,6 +1084,12 @@
       box.innerHTML = '<p class="empty-cart-note">Your cart is empty.</p>';
       return;
     }
+    const free = freePitcherCount();
+    const promoRow = free ? `
+      <div class="checkout-item-row promo-row">
+        <span>🎁 ${free}× ${escapeHtml(PROMO.freeName.replace(' (FREE)', ''))}</span>
+        <span class="checkout-item-right"><span class="promo-free">FREE</span><span class="promo-spacer"></span></span>
+      </div>` : '';
     box.innerHTML = entries.map(([key, i]) => `
       <div class="checkout-item-row">
         <span>${i.qty}× ${escapeHtml(i.name)}</span>
@@ -1073,7 +1098,7 @@
           <button type="button" onclick="removeCartLine('${key.replace(/'/g, "\\'")}')" class="remove-line-btn" aria-label="Remove one">−</button>
         </span>
       </div>
-    `).join('');
+    `).join('') + promoRow;
   }
 
   function removeCartLine(key) {
@@ -1168,7 +1193,7 @@
     document.getElementById('rcptOrderType').textContent = orderTypeLabel(d.orderType);
 
     document.getElementById('rcptItems').innerHTML = d.items.map(i => `
-      <div class="receipt-row"><span>${i.qty}× ${escapeHtml(i.name)}</span><span>${peso(i.qty * i.price)}</span></div>
+      <div class="receipt-row"><span>${i.qty}× ${escapeHtml(i.name)}</span><span class="${i.price === 0 ? 'receipt-free' : ''}">${lineAmount(i)}</span></div>
     `).join('');
 
     document.getElementById('rcptSubtotal').textContent = peso(d.subtotal);
@@ -1295,7 +1320,7 @@
     divider();
 
     d.items.forEach(i => {
-      row(`${i.qty}× ${i.name}`, peso(i.qty * i.price));
+      row(`${i.qty}× ${i.name}`, lineAmount(i));
     });
     divider();
 
@@ -1398,6 +1423,8 @@
     btn.textContent = 'Placing order…';
 
     const items = Object.values(cart).map(i => ({ name: i.name, price: i.price, qty: i.qty, category: i.category }));
+    const freePitchers = freePitcherCount();
+    if (freePitchers > 0) items.push({ name: PROMO.freeName, price: 0, qty: freePitchers, category: PROMO.freeCategory });
     const { subtotal, serviceCharge, total } = computeCharges();
     const isPaid = false; // every payment method is settled at the cashier
 
