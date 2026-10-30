@@ -67,6 +67,18 @@
   @keyframes giftWiggle{ 0%,100%{ transform:rotate(0); } 20%{ transform:rotate(-14deg); } 40%{ transform:rotate(11deg); } 60%{ transform:rotate(-7deg); } 80%{ transform:rotate(4deg); } }
   section.animate-in .category-notice{ animation:fadeUp .4s cubic-bezier(.2,.8,.2,1) .02s both; }
   section.animate-in .notice-icon{ animation:giftWiggle .8s ease .35s both; }
+  .subtabs{ display:flex; gap:4px; background:#EFE8DD; padding:4px; border-radius:999px; margin-bottom:12px; }
+  .subtab{ flex:1; min-height:44px; border-radius:999px; background:transparent; color:var(--brand-muted); font-size:14px; font-weight:600; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15; transition:background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .12s ease; }
+  .subtab-price{ font-size:11px; font-weight:600; opacity:.85; }
+  .subtab.active{ background:#fff; color:var(--brand-green-deep); box-shadow:0 1px 4px rgba(43,36,32,.18); }
+  .subtab.active .subtab-price{ color:var(--brand-primary); opacity:1; }
+  .item-list.swap-in .item-card{ animation:fadeUp .35s cubic-bezier(.2,.8,.2,1) both; }
+  .item-list.swap-in .item-card:nth-child(2){ animation-delay:.04s; }
+  .item-list.swap-in .item-card:nth-child(3){ animation-delay:.08s; }
+  .item-list.swap-in .item-card:nth-child(4){ animation-delay:.12s; }
+  .item-list.swap-in .item-card:nth-child(5){ animation-delay:.16s; }
+  .item-list.swap-in .item-card:nth-child(6){ animation-delay:.20s; }
+  .item-list.swap-in .item-card:nth-child(n+7){ animation-delay:.24s; }
   .item-list{ display:flex; flex-direction:column; gap:8px; }
   .item-card{ background:var(--brand-card); border-radius:16px; box-shadow:0 2px 10px rgba(43,36,32,.06); padding:14px; display:flex; justify-content:space-between; align-items:center; }
   .item-card.sold-out{ background:var(--brand-disabled-bg); box-shadow:none; }
@@ -764,6 +776,55 @@
     'Hot Non-Coffee': 'All hot drinks are 8oz'
   };
 
+  // Categories whose items split into types the customer switches between.
+  // An item belongs to the type whose label appears in its name.
+  const CATEGORY_GROUPS = { 'Refreshers': ['Fruit Tea', 'Fruit Soda'] };
+  const activeGroup = {};   // category name -> the type currently showing (survives re-renders)
+
+  function itemsInGroup(cat, group) {
+    return MENU_ITEMS.filter(i => i.category === cat && i.name.toLowerCase().includes(group.toLowerCase()));
+  }
+
+  // The body of a category section: a plain list, or a type switch + one list per type.
+  function categoryBody(cat) {
+    const items = MENU_ITEMS.filter(i => i.category === cat);
+    const groups = CATEGORY_GROUPS[cat];
+    if (!groups) return `<div class="item-list">${items.map(itemRow).join('')}</div>`;
+
+    if (!activeGroup[cat]) activeGroup[cat] = groups[0];
+    const tabs = groups.map(g => {
+      const prices = [...new Set(itemsInGroup(cat, g).map(i => i.price))];
+      const priceLabel = prices.length === 1 ? peso(prices[0]) : 'from ' + peso(Math.min(...prices));
+      const on = activeGroup[cat] === g;
+      return `<button type="button" role="tab" aria-selected="${on}" class="subtab ${on ? 'active' : ''}" data-group="${escapeHtml(g)}" onclick="selectSubGroup('${cssSafe(cat)}','${escapeHtml(g)}')">${escapeHtml(g)}<span class="subtab-price">${priceLabel}</span></button>`;
+    }).join('');
+    const lists = groups.map(g =>
+      `<div class="item-list ${activeGroup[cat] === g ? '' : 'hidden'}" data-group="${escapeHtml(g)}">${itemsInGroup(cat, g).map(itemRow).join('')}</div>`
+    ).join('');
+    // safety net: an item that matches no type is still shown, never silently dropped
+    const rest = items.filter(i => !groups.some(g => i.name.toLowerCase().includes(g.toLowerCase())));
+    const restList = rest.length ? `<div class="item-list">${rest.map(itemRow).join('')}</div>` : '';
+    return `<div class="subtabs" role="tablist">${tabs}</div>${lists}${restList}`;
+  }
+
+  function selectSubGroup(catId, group) {
+    const cat = CATEGORIES.find(c => cssSafe(c) === catId);
+    const section = document.getElementById('cat-' + catId);
+    if (!cat || !section) return;
+    activeGroup[cat] = group;
+    section.querySelectorAll('.subtab').forEach(b => {
+      const on = b.dataset.group === group;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on);
+    });
+    section.querySelectorAll('.item-list[data-group]').forEach(l => {
+      const show = l.dataset.group === group;
+      l.classList.toggle('hidden', !show);
+      l.classList.remove('swap-in');
+      if (show) { void l.offsetWidth; l.classList.add('swap-in'); }   // replay the little cascade
+    });
+  }
+
   // Small notice shown at the top of a category. The wording is built from the
   // promo settings (PROMO), so it always matches the real rule.
   function categoryNotice(cat) {
@@ -779,9 +840,7 @@
       <section id="cat-${cssSafe(cat)}" class="${cssSafe(cat) === currentCategoryId ? (menuPainted ? '' : 'animate-in') : 'hidden'}">
         <h2 class="section-title">${escapeHtml(cat)}${CATEGORY_TAGLINES[cat] ? `<span class="section-tagline">${escapeHtml(CATEGORY_TAGLINES[cat])}</span>` : ''}</h2>
         ${categoryNotice(cat) ? `<div class="category-notice"><span class="notice-icon" aria-hidden="true">🎁</span><p>${categoryNotice(cat)}</p></div>` : ''}
-        <div class="item-list">
-          ${MENU_ITEMS.filter(i => i.category === cat).map(itemRow).join('')}
-        </div>
+        ${categoryBody(cat)}
       </section>
     `).join('');
     menuPainted = true;
