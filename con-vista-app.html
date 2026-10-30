@@ -70,6 +70,14 @@
   main{ padding:16px; display:flex; flex-direction:column; gap:24px; }
   .section-title{ font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--brand-green-deep); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--brand-border); letter-spacing:0.2px; }
   .section-tagline{ display:block; font-family:'Inter',sans-serif; font-size:12px; font-weight:500; font-style:italic; letter-spacing:.3px; color:var(--brand-muted); margin-top:2px; }
+  .category-notice{ display:flex; align-items:flex-start; gap:8px; background:#FFF4EA; border:1px solid #FFD9BC; border-radius:12px; padding:9px 12px; margin-bottom:12px; }
+  .category-notice p{ font-size:12px; line-height:1.45; color:#8A3F0E; }
+  .category-notice strong{ font-weight:700; }
+  .category-notice em{ font-style:normal; opacity:.8; white-space:nowrap; }
+  .notice-icon{ font-size:16px; line-height:1.2; flex-shrink:0; display:inline-block; }
+  @keyframes giftWiggle{ 0%,100%{ transform:rotate(0); } 20%{ transform:rotate(-14deg); } 40%{ transform:rotate(11deg); } 60%{ transform:rotate(-7deg); } 80%{ transform:rotate(4deg); } }
+  section.animate-in .category-notice{ animation:fadeUp .4s cubic-bezier(.2,.8,.2,1) .02s both; }
+  section.animate-in .notice-icon{ animation:giftWiggle .8s ease .35s both; }
   .item-list{ display:flex; flex-direction:column; gap:8px; }
   .item-card{ background:var(--brand-card); border-radius:16px; box-shadow:0 2px 10px rgba(43,36,32,.06); padding:14px; display:flex; justify-content:space-between; align-items:center; }
   .item-card.sold-out{ background:var(--brand-disabled-bg); box-shadow:none; }
@@ -857,13 +865,27 @@
   }
 
   // Short line shown under a category heading. Add more categories here any time.
-  const CATEGORY_TAGLINES = { 'Pinoy Dish': 'Made for sharing' };
+  const CATEGORY_TAGLINES = {
+    'Pinoy Dish': 'Made for sharing',
+    'Hot Coffee': 'All hot drinks are 8oz',
+    'Hot Non-Coffee': 'All hot drinks are 8oz'
+  };
+
+  // Small notice shown at the top of a category. The wording is built from the
+  // promo settings (PROMO), so it always matches the real rule.
+  function categoryNotice(cat) {
+    if (cat === PROMO.category) {
+      return `<strong>Gift for you!</strong> Get <strong>1 FREE pitcher of iced tea</strong> for every ${PROMO.dishesPerFree} Pinoy Dishes you order. <em>Pancit not included.</em>`;
+    }
+    return '';
+  }
 
   function renderMenu() {
     if (!currentCategoryId && CATEGORIES.length) currentCategoryId = cssSafe(CATEGORIES[0]);
     document.getElementById('menu').innerHTML = CATEGORIES.map(cat => `
       <section id="cat-${cssSafe(cat)}" class="${cssSafe(cat) === currentCategoryId ? (menuPainted ? '' : 'animate-in') : 'hidden'}">
         <h2 class="section-title">${escapeHtml(cat)}${CATEGORY_TAGLINES[cat] ? `<span class="section-tagline">${escapeHtml(CATEGORY_TAGLINES[cat])}</span>` : ''}</h2>
+        ${categoryNotice(cat) ? `<div class="category-notice"><span class="notice-icon" aria-hidden="true">🎁</span><p>${categoryNotice(cat)}</p></div>` : ''}
         <div class="item-list">
           ${MENU_ITEMS.filter(i => i.category === cat).map(itemRow).join('')}
         </div>
