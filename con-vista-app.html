@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Josefin+Sans:wght@600;700&display=swap" rel="stylesheet">
+<script>/* restore the customer's 'animations off' choice before first paint */try{if(localStorage.getItem('cvMotion')==='off')document.documentElement.classList.add('motion-off')}catch(e){}</script>
 <style>
   :root{
     /* Palette sampled directly from the Con Vista logo — see con-vista-design-system.md */
@@ -202,9 +203,8 @@
   .header-logo{ animation:logoGlow 4s ease-in-out infinite; }
 
   /* Anyone who prefers reduced motion gets a calm, still page */
-  @media (prefers-reduced-motion:reduce){
-    *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; animation-delay:0s !important; transition-duration:.01ms !important; }
-  }
+  /* Animation is on for everyone by default; the header button adds this class to switch it all off. */
+  html.motion-off *, html.motion-off *::before, html.motion-off *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; animation-delay:0s !important; transition-duration:.01ms !important; }
 
   /* Cart bar */
   #cartBar{ position:fixed; bottom:0; left:0; right:0; background:var(--brand-primary); color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 -2px 10px rgba(0,0,0,.15); }
@@ -441,7 +441,7 @@
     0%{ transform:translateX(calc(var(--sway) * -1)) rotate(calc(var(--rot) * -1)); }
     100%{ transform:translateX(var(--sway)) rotate(var(--rot)); }
   }
-  @media (prefers-reduced-motion:reduce){ .leaf-fall{ display:none; } }
+  html.motion-off .leaf-fall{ display:none; }
 
   /* =====================================================================
      TAGLINE: polished-steel text with a sword-glint that sweeps across every
@@ -488,11 +488,9 @@
     .santa{ width:30px; height:36px; bottom:5px; }
     .sticky-top header, #view-customer .sticky-top header{ padding-top:10px; padding-bottom:10px; }
   }
-  @media (prefers-reduced-motion:reduce){
-    .tagline, .santa, .santa-arm, .tagline::after{ animation:none; }
-    .santa-arm{ transform:rotate(16deg); }
-    .tagline::after{ display:none; }
-  }
+  html.motion-off .tagline, html.motion-off .santa, html.motion-off .santa-arm, html.motion-off .tagline::after{ animation:none; }
+  html.motion-off .santa-arm{ transform:rotate(16deg); }
+  html.motion-off .tagline::after{ display:none; }
 
   /* =====================================================================
      PHONES: the open category grid scrolls away instead of staying pinned
@@ -509,7 +507,35 @@
   .mini-category-bar.show{ transform:translateY(0); visibility:visible; transition:transform .22s ease, visibility 0s; }
   .mini-category-bar .mini-chevron{ opacity:.7; font-size:13px; }
   @media (max-width:340px){ #view-customer header h1{ font-size:15px; } .santa{ width:28px; height:34px; bottom:3px; } }
-  @media (prefers-reduced-motion:reduce){ .mini-category-bar{ transition:none; } }
+  html.motion-off .mini-category-bar{ transition:none; }
+
+  /* =====================================================================
+     ANIMATIONS ON/OFF BUTTON (header, beside Santa). Sits clear of the
+     tagline on every phone width; the invisible ::before makes the tap
+     target a full 44px even though the pill looks small.
+     ===================================================================== */
+  .motion-toggle{ position:absolute; right:calc(var(--gutter) + 44px + 10px); bottom:10px; z-index:2; display:flex; align-items:center; gap:4px;
+    min-height:28px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.32); background:rgba(255,255,255,.12); color:#EAF2FF;
+    font-family:'Josefin Sans','Poppins',sans-serif; font-size:12px; font-weight:700; letter-spacing:.3px; line-height:1; }
+  .motion-toggle::before{ content:''; position:absolute; top:-9px; bottom:-9px; left:-6px; right:-6px; }
+  .motion-toggle[aria-pressed="false"]{ background:transparent; color:#A8B2BD; border-style:dashed; }
+  @media (max-width:480px){ .motion-toggle{ right:calc(var(--gutter) + 30px + 8px); bottom:8px; } }
+  @media (max-width:340px){ .motion-toggle{ right:calc(var(--gutter) + 28px + 6px); bottom:6px; padding:4px 7px; } .motion-toggle .motion-state{ display:none; } }
+
+  /* =====================================================================
+     CUSTOMER NAME (required at checkout). 16px text stops iOS Safari from
+     zooming the page in when the field is tapped.
+     ===================================================================== */
+  .name-field{ margin-bottom:16px; }
+  .req{ color:#dc2626; font-weight:700; }
+  .text-field{ display:block; width:100%; box-sizing:border-box; padding:12px 14px; font-family:inherit; font-size:16px; line-height:1.3;
+    color:var(--brand-dark); background:#fff; border:1.5px solid var(--brand-border); border-radius:12px; transition:border-color .2s ease, box-shadow .2s ease; }
+  .text-field::placeholder{ color:#a8a29e; }
+  .text-field:focus{ outline:none; border-color:var(--brand-primary); box-shadow:0 0 0 3px rgba(255,116,31,.22); }
+  .text-field[aria-invalid="true"]{ border-color:#dc2626; box-shadow:0 0 0 3px rgba(220,38,38,.14); }
+  .field-error{ color:#dc2626; font-size:13px; line-height:1.35; margin:6px 0 0; }
+  .field-error.hidden{ display:none; }
+  .receipt-name{ text-align:right; overflow-wrap:anywhere; max-width:65%; }
 </style>
 </head>
 <body>
@@ -531,7 +557,7 @@
         <p class="tagline"><span class="tag-a">You dine smarter here.</span> <span class="tag-b">Order right from your table.</span></p>
       </div>
     </div>
-  <div class="santa" aria-hidden="true"><svg class="santa-svg" viewBox="0 0 66 80" xmlns="http://www.w3.org/2000/svg" focusable="false"><path d="M10 80 C10 62 20 58 32 58 C44 58 54 62 54 80 Z" fill="#D62828"/><path d="M12 80 C12.5 70 15 64 20 61" fill="none" stroke="#A81C1C" stroke-width="1.4" stroke-linecap="round"/><circle cx="32" cy="71" r="1.7" fill="#1B1B1B"/><circle cx="32" cy="77" r="1.7" fill="#1B1B1B"/><path d="M17 40 C16 56 22 64 32 66 C42 64 48 56 47 40 C42 47 22 47 17 40 Z" fill="#FFFFFF"/><ellipse cx="32" cy="40" rx="12.5" ry="10" fill="#F6C9A5"/><ellipse cx="27" cy="46" rx="5.6" ry="3.2" transform="rotate(-12 27 46)" fill="#FFFFFF"/><ellipse cx="37" cy="46" rx="5.6" ry="3.2" transform="rotate(12 37 46)" fill="#FFFFFF"/><circle cx="24.5" cy="42" r="2.6" fill="#F28B82" fill-opacity=".65"/><circle cx="39.5" cy="42" r="2.6" fill="#F28B82" fill-opacity=".65"/><circle cx="27" cy="38" r="1.5" fill="#222222"/><circle cx="37" cy="38" r="1.5" fill="#222222"/><circle cx="32" cy="42" r="2.4" fill="#E9967A"/><path d="M17 31 C17 14 28 6 40 8 C48 10 50 20 48 31 Z" fill="#D62828"/><rect x="14" y="27" width="38" height="9" rx="4.5" fill="#FFFFFF"/><circle cx="44" cy="7" r="5.5" fill="#FFFFFF"/><g transform="translate(52 68)"><g class="santa-arm"><rect x="-4.5" y="-20" width="9" height="22" rx="4.5" fill="#D62828"/><circle cx="0" cy="-21" r="5" fill="#FFFFFF"/></g></g></svg></div>
+  <button id="motionToggle" class="motion-toggle" type="button" aria-pressed="true" aria-label="Animations are on. Tap to turn off." title="Animations on/off" onclick="toggleMotion()"><span aria-hidden="true">&#10024;</span><span class="motion-state">On</span></button><div class="santa" aria-hidden="true"><svg class="santa-svg" viewBox="0 0 66 80" xmlns="http://www.w3.org/2000/svg" focusable="false"><path d="M10 80 C10 62 20 58 32 58 C44 58 54 62 54 80 Z" fill="#D62828"/><path d="M12 80 C12.5 70 15 64 20 61" fill="none" stroke="#A81C1C" stroke-width="1.4" stroke-linecap="round"/><circle cx="32" cy="71" r="1.7" fill="#1B1B1B"/><circle cx="32" cy="77" r="1.7" fill="#1B1B1B"/><path d="M17 40 C16 56 22 64 32 66 C42 64 48 56 47 40 C42 47 22 47 17 40 Z" fill="#FFFFFF"/><ellipse cx="32" cy="40" rx="12.5" ry="10" fill="#F6C9A5"/><ellipse cx="27" cy="46" rx="5.6" ry="3.2" transform="rotate(-12 27 46)" fill="#FFFFFF"/><ellipse cx="37" cy="46" rx="5.6" ry="3.2" transform="rotate(12 37 46)" fill="#FFFFFF"/><circle cx="24.5" cy="42" r="2.6" fill="#F28B82" fill-opacity=".65"/><circle cx="39.5" cy="42" r="2.6" fill="#F28B82" fill-opacity=".65"/><circle cx="27" cy="38" r="1.5" fill="#222222"/><circle cx="37" cy="38" r="1.5" fill="#222222"/><circle cx="32" cy="42" r="2.4" fill="#E9967A"/><path d="M17 31 C17 14 28 6 40 8 C48 10 50 20 48 31 Z" fill="#D62828"/><rect x="14" y="27" width="38" height="9" rx="4.5" fill="#FFFFFF"/><circle cx="44" cy="7" r="5.5" fill="#FFFFFF"/><g transform="translate(52 68)"><g class="santa-arm"><rect x="-4.5" y="-20" width="9" height="22" rx="4.5" fill="#D62828"/><circle cx="0" cy="-21" r="5" fill="#FFFFFF"/></g></g></svg></div>
     </header>
 
   <!-- Compact bar shown once a category is picked, to free up screen space -->
@@ -574,6 +600,12 @@
       <div id="checkoutForm">
         <label class="field-label">Your Order</label>
         <div id="checkoutItemsSummary" class="checkout-items-box"></div>
+
+        <div class="name-field">
+          <label class="field-label" for="customerName">Customer Name <span class="req" aria-hidden="true">*</span></label>
+          <input id="customerName" class="text-field" type="text" name="name" autocomplete="name" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" maxlength="40" required aria-required="true" aria-describedby="customerNameError" placeholder="Enter your name" oninput="clearNameError()">
+          <p id="customerNameError" class="field-error hidden" role="alert"></p>
+        </div>
 
         <label class="field-label">Order Type</label>
         <div class="choice-grid grid-3" id="orderTypeGroup">
@@ -621,6 +653,7 @@
           <div class="receipt-row"><span>Date &amp; Time</span><span id="rcptDateTime"></span></div>
           <div class="receipt-row"><span>Location</span><span>Con Vista Antipolo</span></div>
           <div class="receipt-row"><span>Order Type</span><span id="rcptOrderType"></span></div>
+          <div class="receipt-row"><span>Name</span><span id="rcptName" class="receipt-name"></span></div>
 
           <div class="receipt-divider"></div>
           <div id="rcptItems"></div>
@@ -1404,6 +1437,7 @@
     document.getElementById('checkoutError').classList.remove('visible');
     renderCheckoutItemsSummary();
     updateCheckoutTotals();
+    clearNameError();
     document.getElementById('checkoutModal').classList.remove('hidden');
   }
   function closeCheckout() {
@@ -1472,6 +1506,7 @@
     document.getElementById('rcptOrderNo').textContent = formatOrderNumber(d.orderNumber);
     document.getElementById('rcptDateTime').textContent = formatReceiptDateTime();
     document.getElementById('rcptOrderType').textContent = orderTypeLabel(d.orderType);
+    document.getElementById('rcptName').textContent = d.customerName || '';
 
     document.getElementById('rcptItems').innerHTML = d.items.map(i => `
       <div class="receipt-row"><span>${i.qty}× ${escapeHtml(i.name)}</span><span class="${i.price === 0 ? 'receipt-free' : ''}">${lineAmount(i)}</span></div>
@@ -1537,7 +1572,7 @@
     H += 40;                         // title
     H += 20;                         // subtitle
     H += 14;                         // gap
-    H += lineH * 4;                  // order no / date / location / type
+    H += lineH * 5;                  // order no / date / location / type / name
     H += 14;                         // divider gap
     H += lineH * d.items.length;     // items
     H += 14;                         // divider gap
@@ -1579,8 +1614,16 @@
       ctx.fillStyle = opts.color || '#1c1917';
       ctx.textAlign = 'left';
       ctx.fillText(label, PAD, y);
+      let shown = String(value);
+      if (opts.fitValue) {   // keep a long value from running into its label
+        const room = contentW - ctx.measureText(label).width - 16;
+        if (ctx.measureText(shown).width > room) {
+          while (shown.length > 1 && ctx.measureText(shown + '\u2026').width > room) shown = shown.slice(0, -1);
+          shown = shown.trimEnd() + '\u2026';
+        }
+      }
       ctx.textAlign = 'right';
-      ctx.fillText(value, W - PAD, y);
+      ctx.fillText(shown, W - PAD, y);
       y += lineH;
     }
     function divider() {
@@ -1598,6 +1641,7 @@
     row('Date & Time', formatReceiptDateTime());
     row('Location', 'Con Vista Antipolo');
     row('Order Type', orderTypeLabel(d.orderType));
+    row('Name', d.customerName || '', { fitValue: true });
     divider();
 
     d.items.forEach(i => {
@@ -1683,19 +1727,53 @@
 
 
 
+  // ---- Customer name: required at checkout. It is saved with the order (customer_name) and shown on the
+  // receipt and on the kitchen / barista boards so staff know whose order it is.
+  const NAME_MAX = 40;
+  let NAME_HAS_LETTER = /[A-Za-z\u00C0-\u024F\u0370-\u03FF\u0400-\u04FF\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/;
+  try { NAME_HAS_LETTER = new RegExp('\\p{L}', 'u'); } catch (e) {}   // exact Unicode letters where supported; older phones keep the list above
+  function cleanCustomerName(raw) {
+    return String(raw || '')
+      .replace(/[\u0000-\u001F\u007F]/g, ' ')      // no control characters
+      .replace(/\s+/g, ' ').trim()                  // one space between words, none at the ends
+      .slice(0, NAME_MAX).replace(/[\uD800-\uDBFF]$/, '').trim();
+  }
+  function validCustomerName(name) { return name.length >= 2 && NAME_HAS_LETTER.test(name); }   // not blank, not just "." or "12"
+  function showNameError(msg) {
+    const input = document.getElementById('customerName'), err = document.getElementById('customerNameError');
+    input.setAttribute('aria-invalid', 'true');
+    err.textContent = msg;
+    err.classList.remove('hidden');
+  }
+  function clearNameError() {
+    const input = document.getElementById('customerName'), err = document.getElementById('customerNameError');
+    if (!input || !err) return;
+    input.removeAttribute('aria-invalid');
+    err.classList.add('hidden');
+  }
+  function focusNameInput() {
+    const input = document.getElementById('customerName');
+    try { input.focus({ preventScroll: true }); } catch (e) { input.focus(); }
+    if (input.scrollIntoView) input.scrollIntoView({ block: 'center' });
+  }
+
   async function placeOrder() {
     const errEl = document.getElementById('checkoutError');
     errEl.classList.remove('visible');
 
-    if (!orderType || !paymentMethod) {
-      errEl.textContent = 'Please choose an order type and payment method.';
-      errEl.classList.add('visible');
-      return;
-    }
+    // Name first (it is the first field), but report every problem at once rather than one per tap.
+    const nameInput = document.getElementById('customerName');
+    const customerName = cleanCustomerName(nameInput.value);
+    const nameOk = validCustomerName(customerName);
+    if (nameOk) clearNameError();
+    else showNameError(customerName ? 'Please enter your real name (at least 2 letters).' : 'Please enter your name so we know whose order it is.');
 
-    if (orderType === 'pickup') {
-      errEl.textContent = 'Pick-Up is not available yet. Please choose Dine-In or Take-Out.';
-      errEl.classList.add('visible');
+    let problem = '';
+    if (!orderType || !paymentMethod) problem = 'Please choose an order type and payment method.';
+    else if (orderType === 'pickup') problem = 'Pick-Up is not available yet. Please choose Dine-In or Take-Out.';
+    if (problem) { errEl.textContent = problem; errEl.classList.add('visible'); }
+    if (!nameOk || problem) {
+      if (!nameOk) focusNameInput();
       return;
     }
 
@@ -1711,6 +1789,7 @@
 
     const payload = {
       order_type: orderType,
+      customer_name: customerName,
       items: items,
       subtotal: subtotal,
       service_charge_percent: orderType === 'dine-in' ? SERVICE_CHARGE_RATE * 100 : 0,
@@ -1746,9 +1825,13 @@
     const capturedOrderType = orderType;
     const capturedIsPaid = isPaid;
     const capturedOrderNumber = insertedOrder.order_number;
+    const capturedName = customerName;
 
     cart = {}; orderType = null; paymentMethod = null;
+    nameInput.value = '';          // the next order on this phone asks for a name again
+    clearNameError();
     updateCartBar();
+    renderMenu();                  // clear the leftover "1 / 2" counters on the items that were just ordered
     document.querySelectorAll('.order-type-btn, .payment-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('paymentNote').classList.add('hidden');
 
@@ -1759,6 +1842,7 @@
       total: total,
       orderType: capturedOrderType,
       isPaid: capturedIsPaid,
+      customerName: capturedName,
       orderNumber: capturedOrderNumber
     });
 
@@ -1816,6 +1900,30 @@
     lastVerseIndex = idx;
     return idx;
   }
+  // ---- Animations on/off. Decorative animation is ON by default for everyone. Many phones report
+  // "reduce motion" without the owner or customer ever choosing it (battery saver, "remove animations"),
+  // and honouring that silently switched every effect off. Instead there is a visible button in the header:
+  // anyone can switch animations off, and the choice is remembered on that phone.
+  const HONOR_OS_REDUCED_MOTION = false;   // set to true to start animations OFF on phones that ask for reduced motion
+  function setMotion(off, remember) {
+    document.documentElement.classList.toggle('motion-off', off);
+    const btn = document.getElementById('motionToggle');
+    if (btn) {
+      btn.setAttribute('aria-pressed', String(!off));
+      btn.setAttribute('aria-label', off ? 'Animations are off. Tap to turn on.' : 'Animations are on. Tap to turn off.');
+      const state = btn.querySelector('.motion-state');
+      if (state) state.textContent = off ? 'Off' : 'On';
+    }
+    if (remember) { try { localStorage.setItem('cvMotion', off ? 'off' : 'on'); } catch (e) {} }
+  }
+  function toggleMotion() { setMotion(!document.documentElement.classList.contains('motion-off'), true); }
+  function initMotionToggle() {
+    let saved = null;
+    try { saved = localStorage.getItem('cvMotion'); } catch (e) {}
+    const osReduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    setMotion(saved ? saved === 'off' : (HONOR_OS_REDUCED_MOTION && osReduce), false);
+  }
+
   // ---- Category grid on phones. While the grid is OPEN it scrolls away like normal page content
   // (pinned, it covered 60%+ of a phone screen and on small phones left no room for the menu at all).
   // It is pinned again once collapsed to the slim bar. When the open grid has scrolled out of sight,
@@ -1828,7 +1936,8 @@
     bar.classList.toggle('show', gridOpen && nav.getBoundingClientRect().bottom < 0);
   }
   function openCategoryGrid() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const osReduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);   // plain scrolling still respects the phone setting
+    window.scrollTo({ top: 0, behavior: osReduce ? 'auto' : 'smooth' });
   }
   function initMiniCategoryBar() {
     let queued = false;
@@ -1843,12 +1952,11 @@
   // ---- Falling leaves: an ambient layer of leaves drifting down the whole page.
   // Built once; after that it is pure CSS animation (transform and opacity only),
   // so it costs almost nothing, never blocks a tap, and sits under the header,
-  // footer and pop-ups. Skipped entirely for anyone who prefers reduced motion.
+  // footer and pop-ups. The button in the header switches it off (see initMotionToggle).
   function startFallingLeaves() {
     const layer = document.getElementById('leafFall');
     if (!layer || layer.childElementCount) return;
     const mq = q => (window.matchMedia ? window.matchMedia(q).matches : false);
-    if (mq('(prefers-reduced-motion: reduce)')) return;
     const count = mq('(max-width: 600px)') ? 8 : 14;            // fewer on phones, to save battery
     const rnd = (a, b) => a + Math.random() * (b - a);
     const colourways = ['v1', 'v1', 'v1', 'v2', 'v2', 'v3', 'v4', 'v4'];   // mostly greens, a few warm orange
@@ -1899,7 +2007,13 @@
     showNextVerse(true);
     setInterval(() => showNextVerse(false), 60000);
     window.addEventListener('resize', syncFooterHeight);
+    // The footer's height can change by itself after the first measurement (the web font finishing loading and re-wrapping the verse,
+    // rotating to a longer verse, the phone turning). Follow its real size so the cart bar never overlaps it or floats above it.
+    const footerEl = document.getElementById('siteFooter');
+    if (window.ResizeObserver && footerEl) new ResizeObserver(syncFooterHeight).observe(footerEl);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncFooterHeight);
     syncFooterHeight();
+    initMotionToggle();
     startFallingLeaves();
     initMiniCategoryBar();
   }
@@ -1915,12 +2029,14 @@
     window.handleCloseTap = handleCloseTap;
     window.openCheckout = openCheckout;
     window.placeOrder = placeOrder;
+    window.clearNameError = clearNameError;
     window.removeCartLine = removeCartLine;
     window.saveReceiptImage = saveReceiptImage;
     window.scrollToCategory = scrollToCategory;
     window.expandCategoryNav = expandCategoryNav;
     window.selectSubGroup = selectSubGroup;
     window.openCategoryGrid = openCategoryGrid;
+    window.toggleMotion = toggleMotion;
     window.selectFlavorChoice = selectFlavorChoice;
     window.selectOrderType = selectOrderType;
     window.selectPayment = selectPayment;
@@ -2079,7 +2195,13 @@ function orderCard(o) {
   const itemsHtml = items.map(it => `<div class="order-item-row ${isDrinkCategory(it.category) ? 'item-row-drink' : ''}">
       <span>${it.qty}× ${escapeHtml(it.name)}${isDrinkCategory(it.category) ? ' ☕' : ''}</span>
     </div>`).join('');
-  const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
+  // Customers now give their name at checkout. Dine-in shows the table (if one was ever recorded) and the name;
+  // older orders without a name look exactly as they did before.
+  const guest = String(o.customer_name || '').trim();
+  const table = String(o.table_number || '').trim();
+  const who = o.order_type === 'dine-in'
+    ? (table ? `Table ${escapeHtml(table)}` + (guest ? ` · ${escapeHtml(guest)}` : '') : (guest ? escapeHtml(guest) : 'Table —'))
+    : escapeHtml(guest || '—');
   const paidBadge = o.paid
     ? `<span class="badge badge-green">PAID</span>`
     : `<span class="badge badge-red">UNPAID</span>`;

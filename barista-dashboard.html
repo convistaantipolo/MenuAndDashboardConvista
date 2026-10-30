@@ -230,8 +230,8 @@ function timeAgo(iso) {
 }
 
 const FOOD_CATEGORIES = new Set([
-  'Appetizers', 'All-Day Breakfast', 'Desserts', 'Pancit', 'Pinoy Dishes (For Sharing)',
-  'Pasta', 'Salad', 'Silog Meals', 'Con Vista Specials', 'Steak', 'Sushi', 'Sandwiches'
+  'Appetizers', 'All-Day Breakfast', 'Desserts', 'Pinoy Dish',
+  'Pasta', 'Salad', 'Silog Meals', 'Steak', 'Sushi', 'Sandwiches'
 ]);
 function isFoodCategory(cat) { return FOOD_CATEGORIES.has(cat); }
 
@@ -240,7 +240,13 @@ function orderCard(o) {
   const itemsHtml = items.map(it => `<div class="order-item-row ${isFoodCategory(it.category) ? 'item-row-food' : ''}">
       <span>${it.qty}× ${escapeHtml(it.name)}${isFoodCategory(it.category) ? ' 🍴' : ''}</span>
     </div>`).join('');
-  const who = o.order_type === 'dine-in' ? `Table ${escapeHtml(o.table_number || '—')}` : escapeHtml(o.customer_name || '—');
+  // Customers now give their name at checkout. Dine-in shows the table (if one was ever recorded) and the name;
+  // older orders without a name look exactly as they did before.
+  const guest = String(o.customer_name || '').trim();
+  const table = String(o.table_number || '').trim();
+  const who = o.order_type === 'dine-in'
+    ? (table ? `Table ${escapeHtml(table)}` + (guest ? ` · ${escapeHtml(guest)}` : '') : (guest ? escapeHtml(guest) : 'Table —'))
+    : escapeHtml(guest || '—');
   const paidBadge = o.paid
     ? `<span class="badge badge-green">PAID</span>`
     : `<span class="badge badge-red">UNPAID</span>`;
