@@ -543,8 +543,15 @@
      the customer to pay at the counter.
      ===================================================================== */
   .cashier-note{ margin:14px 0; padding:14px 16px; border-radius:14px; background:#FFF1E3; border:2px solid var(--brand-primary);
-    color:#9A4A12; font-size:17px; font-weight:800; line-height:1.4; text-align:center; }
+    color:#9A4A12; font-size:17px; font-weight:800; line-height:1.4; text-align:center;
+    animation:cashierBlink 1.1s ease-in-out infinite; }
+  @keyframes cashierBlink{
+    0%, 100%{ opacity:1; background:#FFF1E3; border-color:var(--brand-primary); }
+    50%{ opacity:.72; background:#FFE3C8; border-color:#FFB877; }
+  }
   @media (max-width:380px){ .cashier-note{ font-size:15.5px; padding:12px 14px; } }
+  /* html.motion-off (the header's animations switch) already neutralises every animation on the page,
+     including this blink, via its blanket *{ animation-duration:.01ms !important } rule below. */
 </style>
 </head>
 <body>
@@ -657,7 +664,7 @@
         <p class="receipt-heading">Order Received!</p>
         <p class="receipt-sub">Thank you for ordering with us.</p>
 
-        <p id="rcptPaymentNote" class="cashier-note" role="status">&#128181; Kindly proceed to the cashier for payment. Thank you!</p>
+        <p id="rcptPaymentNote" class="cashier-note" role="status"></p>
 
         <div class="receipt-box">
           <div class="receipt-row"><span>Order No.</span><span id="rcptOrderNo" class="receipt-strong"></span></div>
@@ -1796,8 +1803,8 @@
     }
     document.getElementById('rcptTotal').textContent = peso(d.total);
 
-    const paymentNoteText = 'Kindly proceed to the cashier for payment. Thank you!';
-    document.getElementById('rcptPaymentNote').textContent = '\u{1F4B1} ' + paymentNoteText;
+    const paymentNoteText = 'Please pay at the cashier first so we can process your order. Thank you for your understanding! \u{1F9E1}';
+    document.getElementById('rcptPaymentNote').textContent = paymentNoteText;
     CURRENT_RECEIPT.paymentNoteText = paymentNoteText;
 
     // Reset the save-gate: every new receipt must be saved (or explicitly
